@@ -1,0 +1,18 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.logo {
+  background-color: #0D122B;
+  padding: 10px;
+  color: white;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
