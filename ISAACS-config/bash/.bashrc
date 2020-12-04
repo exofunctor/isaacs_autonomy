@@ -158,8 +158,9 @@ function auto-apt-install
         sudo apt autoremove --purge
         sudo apt autoclean
     # If no argument was given, check if fzf is installed, and use it to select packages.
-    elif [[ -e /usr/bin/fzf ]]; then
+    elif [[ -e $FZF ]]; then
         sudo apt update
+        PACKAGES=$(sudo apt list | fzf --multi | cut -f 1 -d '/')
         sudo apt upgrade
         sudo apt install $PACKAGES
         sudo apt autoremove --purge
@@ -179,7 +180,7 @@ function auto-apt-remove
         sudo apt autoremove --purge
         sudo apt autoclean
     # If no argument was given, check if fzf is installed, and use it to select packages.
-    elif [[ -e /usr/bin/fzf ]]; then
+    elif [[ -e $FZF ]]; then
         sudo apt update
         PACKAGES=$(sudo apt list --installed | fzf --multi | cut -f 1 -d '/')
         sudo apt remove --purge $PACKAGES
