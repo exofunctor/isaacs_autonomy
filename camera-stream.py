@@ -44,56 +44,77 @@ class Explorer():
 
 
 # TODO: description and parameters.
-def update_grid(grid, depth, yaw, x, y):
+# NOTE: camera_FOV and yaw must be in radians
+def update_grid(grid, depth_map, camera_FOV, x, z, yaw):
 
+    # TODO: Description
     # Calculate how far the obstacle is from the robot based on the yaw
     # and the given depth. Then, convert these distances to the absolute
     # x and y coordinates of the obstacle in the world, by adding to it
     # the robot's position.
 
-    #
-    #         . <- obstacle
-    #    /   /
-    # depth /
-    #   /  /
-    #     /) <- yaw
-    #    . ――――
-    #    ^
-    #    |
-    #   x, y (robot position)
+    #   z-axis
+    #   ^
+    #   |
+    #   |  dmap[0] -> \         }
+    #   |   dmap[1] -> \        }
+    #   |              .\       } obstacle wall (varying depth along axis)
+    #   |             /  \      }
+    #                /    \ <---}-- dmap[n]
+    #               /
+    #              /
+    #             / ) <- yaw
+    #            · ――――――――――――――――――――――――――――――――――> x-axis
+    #            ^
+    #            |
+    #           x, z (robot position)
     #
 
-    dx = depth * np.cos(yaw)
-    dy = depth * np.sin(yaw)
-    obstacle_x = x + dx
-    obstacle_y = y + dy
+    num_pixels = len(depth_map)  # Can be thought of as rays.
+    pixel_FOV = camera_FOV / (num_pixels - 1)
+    leftmost = - camera_FOV / 2
+    rightmost = pixel_FOV - leftmost
+    yaw_map = yaw + np.arange(leftmost, rightmost, pixel_FOV)
+
+    # TODO: Description
+    dx = np.cos(yaw_map) * depth_map  # NOTE: this is and must be the hadamard product.
+    dz = np.sin(yaw_map) * depth_map
+
+    obstacles_x = x + dx
+    obstacles_z = z + dz
+    print(obstacles_x)
+    print(obstacles_z)
 
     # Convert the position of the obstacle to grid coordinates.
-    grid_y = grid.shape[0] - 1
-    obstacle_x = int(np.ceil(obstacle_x))
-    obstacle_y = grid_y - int(np.ceil(obstacle_y))
+    grid_z = grid.shape[0] - 1
+    obstacles_x = np.ceil(obstacles_x).astype(np.int32)
+    obstacles_z = grid_z - np.ceil(obstacles_z).astype(np.int32)
 
     # NumPy and OpenCV begin indexing from the top-left corner, which means
     # that the robot's y must be adjusted to match grid coordinates.
     x = int(np.floor(x))
-    y = int(np.floor(grid_y - y))
+    z = int(np.floor(grid_z - z))
+
+    print(obstacles_x)
+    print(obstacles_z)
 
     # In NumPy, the first index selects the rows (y-axis),
     # while the second index selects the columns (x-axis).
-    grid[obstacle_y][obstacle_x] = grid[obstacle_y][obstacle_x] + 1
+    grid[obstacles_z][obstacles_x] = grid[obstacles_z][obstacles_x] + 1
+    return grid
 
     # Create a box, large enough to fit the depth size, in any orientation,
     # and then draw the depth line on it. The resulting array will
     # be used to update all grid pixels up to where the depth ends -
     # that is, where the sensor has identified that an obstacle is present.
-    box = np.zeros((-(obstacle_y - y), obstacle_x - x))
+    box = np.zeros((-(obstacle_z - z), obstacle_x - x))
 
     # Draw the depth line on top of the box. This is equivalent
     # to setting to "1" all the pixels traversed by the depth line.
     # Unlike NumPy, in most OpenCV functions, the first dindex indicates
     # the Nth column (x-axis), and the second index the Nth row (y-axis).
-    box_y = box.shape[0] - 1
-    cv2.line(box, (0, box_y), (int(dx), box_y - int(dy)),
+    box_z = box.shape[0] - 1
+    cv2.line(box, (0, box_z), (int(dx), box_z - int(dy)),
              color=1, thickness=1)
 
     # Negate the box to show that the space indicated by the line that
@@ -105,15 +126,20 @@ def update_grid(grid, depth, yaw, x, y):
     # have been identified as empty.
     x1 = x
     x2 = obstacle_x
-    y1 = obstacle_y + 1
-    y2 = y + 1
+    z1 = obstacle_z + 1
+    z2 = z + 1
     # TODO: Only works for square grids. Perhaps expand to rectangles.
-    grid[y1:y2, x1:x2] = grid[y1:y2, x1:x2] + box
+    grid[z1:z2, x1:x2] = grid[z1:z2, x1:x2] + box
 
     return grid
 
 
+
 ##
+grid = np.zeros((20, 20)).astype(np.int16)
+depth_map = 5*np.ones(5)
+grid = update_grid(grid, depth_map, np.pi, np.pi/4, 0, 0)
+
 ##
 # Subscribed topics
 # /dji_sdk/rtk_position
