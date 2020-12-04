@@ -1,8 +1,27 @@
+# The principal environment variables.
+export WORKSPACE=$HOME/ISAACS
+# If a valid workspace was given, automatically source it and cd into it.
+[[ -e $WORKSPACE ]] && source $WORKSPACE/devel/setup.bash && cd $WORKSPACE
+export CONFIG=$HOME/ISAACS-config
+[[ -e $CONFIG/fzf ]] && export FZF=$CONFIG/fzf && source $FZF/shell/completion.bash && source $FZF/shell/key-bindings.bash
+
+
+
+
+# Set the text editor to `(n)vim`.
+if [[ -e /usr/bin/nvim ]]; then
+    export EDITOR="nvim"
+elif [[ -e /usr/bin/vim ]]; then
+    export EDITOR="vim"
+fi
+
+
+
+
 stty -ixon                                 # Prevent ^Q and ^S from freezing the shell.
 set -o ignoreeof                           # Prevent ^D from closing the shell.
 shopt -s autocd                            # Automatically cd to the entered directory.
 echo -en "\e[5 q"                          # Set the cursor to i-beam.
-
 
 
 
@@ -13,7 +32,21 @@ alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 alias .......='cd ../../../../../..'
 
-# Find files more easily.
+
+
+
+# PREVIEW FILES
+# If `bat` is present, use it as the default pager instead of `less`.
+if [[ -e /usr/bin/bat || -e $HOME/.cargo/bin/bat ]]; then
+    export PAGER="bat"
+    export BAT_THEME="ansi-dark"
+fi
+
+
+
+
+# FIND FILES
+# Regex warper.
 function easy_find
 {
     if [[ $2 ]]; then
@@ -23,6 +56,84 @@ function easy_find
     fi
 }
 alias find='easy_find'
+# If `fd` is present, use it as the default finder instead of `find`.
+if [[ -e /usr/bin/fdfind ]]; then
+    # On Debian systems `fd` is named `fdfind` and needs to be aliased.
+    export FINDER="fdfind"
+    alias fd="fdfind --follow --hidden"
+    alias find="fdfind --follow --hidden"
+
+elif [[ -e /usr/bin/fd ]]; then
+    export FINDER="fd"
+    alias fd="fd --follow --hidden"
+    alias find="fd --follow --hidden"
+
+else
+    export FINDER="easy_find"
+    alias fd='easy_find'
+fi
+
+
+
+
+# LIST FILES
+# Use `exa` if installed.
+if [[ -e /usr/bin/exa || -e $HOME/.cargo/bin/exa ]]; then
+
+    # If the current terminal is urxvt only display text.
+    if [[ $TERM == rxvt-unicode-256color ]]; then
+        alias l='exa -lFa --time-style=long-iso --color-scale --group-directories-first --git'
+        alias ll='exa -lFa --time-style=long-iso --color-scale --group-directories-first --git --tree --level=2'
+    # Else, also display icons.
+    else
+        alias l='exa -lFai --time-style=long-iso --color-scale --icons --group-directories-first --git'
+        alias ll='exa -lFai --time-style=long-iso --color-scale --icons --group-directories-first --git --tree --level=2'
+    fi
+
+# Else, default to `ls`.
+else
+    alias l='ls -lFAih --group-directories-first --color=auto'
+    alias ll='ls -lFAihR  --group-directories-first --color=auto --dereference-command-line-symlink-to-dir'
+fi
+
+
+
+
+# RENAME FILES
+# Regex warper.
+function easy_rename
+{
+    if [[ $3 ]]; then
+        rename "s/$1/$2/g" *$3*
+    else
+        rename "s/$1/$2/g" *
+    fi
+}
+alias rename='easy_rename'
+
+
+
+# FZF (FUZZY FINDER)
+export FZF_HEIGHT=16
+# If fzf is installed, source it, and configure it accordingly.
+if [[ $FZF ]]; then
+
+    # Pattern needed to trigger fuzzy shell completion when Tab is pressed.
+    export FZF_COMPLETION_TRIGGER=""
+
+    # Use `fd` as the finder, rather than `find`.
+    #if [[ -e /usr/bin/fd ]]; then
+        #export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore --exclude \.git --max-depth 5"
+    #elif [[ -e /usr/bin/fdfind ]]; then
+        #export FZF_DEFAULT_COMMAND="fdfind --hidden --no-ignore --exclude \.git --max-depth 5"
+    #fi
+
+    # Default arguments passed each time `fzf` is launched.
+    export FZF_DEFAULT_OPTS="--tiebreak=length,begin,end --multi --height=$FZF_HEIGHT --layout=reverse --info=inline"
+
+    # Default options when `fzf` is launched in history mode
+    export FZF_CTRL_R_OPTS="--sort"
+fi
 
 
 
@@ -47,8 +158,9 @@ function auto-apt-install
         sudo apt autoremove --purge
         sudo apt autoclean
     # If no argument was given, check if fzf is installed, and use it to select packages.
-    elif [[ -e /usr/bin/fzf ]]; then
+    elif [[ -e $FZF ]]; then
         sudo apt update
+        PACKAGES=$(sudo apt list | fzf --multi | cut -f 1 -d '/')
         sudo apt upgrade
         sudo apt install $PACKAGES
         sudo apt autoremove --purge
@@ -68,7 +180,7 @@ function auto-apt-remove
         sudo apt autoremove --purge
         sudo apt autoclean
     # If no argument was given, check if fzf is installed, and use it to select packages.
-    elif [[ -e /usr/bin/fzf ]]; then
+    elif [[ -e $FZF ]]; then
         sudo apt update
         PACKAGES=$(sudo apt list --installed | fzf --multi | cut -f 1 -d '/')
         sudo apt remove --purge $PACKAGES
@@ -161,26 +273,9 @@ alias gdb='git branch -d'
 
 
 
-# Set the text editor to `(n)vim`.
-if [[ -e /usr/bin/nvim ]]; then
-    export EDITOR="nvim"
-elif [[ -e /usr/bin/vim ]]; then
-    export EDITOR="vim"
-fi
-
-
-# TODO: Description
-export WORKSPACE=$HOME/ISAACS
-export CONFIG=$HOME/ISAACS-config
-[[ -e $CONFIG/fzf ]] && export FZF=$CONFIG/fzf
-
-
-# If a valid workspace was given, automatically source it and cd into it.
-[[ -e $WORKSPACE ]] && source $WORKSPACE/devel/setup.bash &&cd $WORKSPACE
-
 # Start a tmux session if not already in one.
 if [[ $TERM != "screen" ]]; then
-    tmux
+    tmux -f $CONFIG/tmux.conf
 fi
 
 
@@ -238,5 +333,5 @@ Ctrl + Alt  +  < ⌄ >   RESIZE THE SPLITS CREATED WITH F3/F7
 
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        *** See ~/ISAACS-config/ROS_Cheatsheet for a list of ROS commands. ***
+        *** See   ~/ISAACS-config/HOWTO-ROS.pdf   for a list of ROS commands. ***
 "
