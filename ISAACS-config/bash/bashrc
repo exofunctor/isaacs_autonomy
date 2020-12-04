@@ -4,6 +4,7 @@ export WORKSPACE=$HOME/ISAACS
 [[ -e $WORKSPACE ]] && source $WORKSPACE/devel/setup.bash && cd $WORKSPACE
 export CONFIG=$HOME/ISAACS-config
 [[ -e $CONFIG/fzf ]] && export FZF=$CONFIG/fzf && source $FZF/shell/completion.bash && source $FZF/shell/key-bindings.bash
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 
 
@@ -275,7 +276,8 @@ alias gdb='git branch -d'
 
 # Start a tmux session if not already in one.
 if [[ $TERM != "screen" ]]; then
-    tmux -f $CONFIG/tmux.conf
+    #tmux -f $CONFIG/tmux.conf
+    tmux
 fi
 
 
