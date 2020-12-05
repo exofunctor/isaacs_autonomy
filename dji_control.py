@@ -34,7 +34,7 @@ def main():
             print("j: rotate with negative yaw")
         elif (input == "l"):
             msg.axes = [0, 0, 0, 5]
-            print("j: rotate with positive yaw")
+            print("l: rotate with positive yaw")
         elif (input == "i"):
             msg.axes = [0, 0, 2, 0]
             print("i: increase height")
@@ -44,7 +44,7 @@ def main():
         else:
             msg.axes = [0, 0, 0, 0]
             print("incorrect input: sending stop command")
-            
+
         pub.publish(msg)
         # Use our rate object to sleep until it is time to publish again
         r.sleep()
