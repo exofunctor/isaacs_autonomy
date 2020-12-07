@@ -5,26 +5,38 @@ roslib.load_manifest('isaacs_autonomy')
 import rospy
 from geometry_msgs.msg import QuaternionStamped
 from numpy import array, arctan2, arcsin, pi
-
+from camera_stream import CameraStream
 
 # TODO: Description
 # 100hz
 class AttitudeStream:
     def __init__(self, topic):
         self.attitude_sub = rospy.Subscriber(topic, QuaternionStamped, self.callback)
-        self.euler_angles = 0
-        self.init_euler_angles = 0
+        self.euler_angles = array([0, 0, 0])
+        self.pitch_x = 0
+        self.yaw_y = 0
+        self.roll_z = 0
+        self.init_euler_angles = array([0, 0, 0])
         self.init = False
 
     def callback(self, data):
-        euler_angles = self.Q2Euler(data)
+        attitude = (
+                    data.quaternion.x,
+                    data.quaternion.y,
+                    data.quaternion.z,
+                    data.quaternion.w
+                   )
+        euler_angles = self.Q2Euler(attitude)
         # TODO: Description.
         if not self.init:
             self.init_euler_angles = euler_angles
             self.init = True
         self.euler_angles = euler_angles - self.init_euler_angles
+        self.pitch_x = self.euler_angles[0]
+        self.yaw_y = self.euler_angles[1]
+        self.roll_z = self.euler_angles[2]
         print(self.euler_angles * 180 / pi)
-        return self.euler_angles
+        #return self.euler_angles
 
     # Convert a quaternion into euler angles.
     # Pitch is the rotation around the x-axis in radians.
@@ -39,11 +51,11 @@ class AttitudeStream:
     # -|--------> x (pitch)
     #
     # TODO: determine rl correspondances
-    def Q2Euler(self, quaternion_stamped):
-        x = quaternion_stamped.quaternion.x
-        y = quaternion_stamped.quaternion.y
-        z = quaternion_stamped.quaternion.z
-        w = quaternion_stamped.quaternion.w
+    def Q2Euler(self, Q):
+        x = Q[0]
+        y = Q[1]
+        z = Q[2]
+        w = Q[3]
         """
         - x, y, z, w: the values of the quaternion.
 
@@ -66,8 +78,11 @@ class AttitudeStream:
 
 
 def main():
-    AttitudeStream("/dji_sdk/attitude")
-    rospy.init_node("attitude_stream", anonymous=True)
+    attitude_stream = AttitudeStream("/dji_sdk/attitude")
+    camera_stream = CameraStream("/dji_sdk/stereo_240p_front_depth_images") 
+    print(attitude_stream.euler_angles)
+    print(camera_stream)
+    rospy.init_node("isaacs_autonomy", anonymous=True)
     try:
         #print(self.euler_angles)
         rospy.spin()
