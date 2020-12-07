@@ -1,146 +1,110 @@
+#!/usr/bin/env python
+# from camera_stream import CameraStream
 import numpy as np
 import cv2
 
 
-class depth_map(camera_stream, pitch_stream, roll_stream):
+class depthMap:
 
+    def __init__(self, disparity_stream, pitch_stream, roll_stream, f=None):
+        # TODO return as grayscale only
+        # self.camera_stream_topic = "/dji_sdk/stereo_240p_front_depth_images"
+        # self.camera_stream = CameraStream(self.camera_stream_topic)
+        self.disparity_stream = disparity_stream
+        self.pitch_stream = pitch_stream
+        self.roll_stream = roll_stream
 
-# Create the 3xN meshgrid corresponding to `im`.
-# This meshgrid will be an array of the form:
-#    0 1 2     0 1 2     0 1 2     im.width  (x)
-#    0 0 0 ... 1 1 1 ... 2 2 2 ... im.height (y)
-#    1 1 1     1 1 1     1 1 1          1
-def create_meshgrid(im):
-    """
-    - im: a 2D or 3D NumPy array representing an image.
-    """
-    x = np.arange(im.shape[1])
-    y = np.arange(im.shape[0])
-    xx, yy = np.meshgrid(x, y)
-    ones = np.ones(im.shape[:2])
+        # The image dimensions.
+        self.h = self.camera_stream().shape[0]
+        self.w = self.camera_stream().shape[1]
 
-    # This creates a meshrig in the shape of `im`.
-    meshgrid = np.stack((xx, yy, ones), axis=1)
+        # The focal length.
+        self.d = np.sqrt(self.h**2 + self.w**2)
+        self.f = f
 
-    # This reshapes the meshgrid to be 3xN.
-    x = meshgrid[:, 0, :]
-    y = meshgrid[:, 1, :]
-    meshgrid = np.array([x.ravel(), y.ravel(), np.ones_like(x).ravel()])
+    def callback(self):
+        disparity = self.disparity_stream()
+        pitch = self.pitch_stream()
+        roll = self.roll_stream()
+        # TODO: Description.
+        depth_map = self.warp_3D(disparity, pitch, roll)
+        # Reduce the depth map to a 1D array.
+        depth_map = self.maxpool_columns(depth_map)
+        return disparity
 
-    return meshgrid
+    # Warp an image using a 3D-Rotational model.
+    # TODO: description
+    # TODO: find focal_length
+    # NOTE: im must be b&w
+    def warp_3D(self, im, pitch=0, roll=0):
 
+        cx = np.cos(pitch)
+        sx = np.sin(pitch)
+        cz = np.cos(roll)
+        sz = np.sin(roll)
 
-# Warp an image into another, per the specified homography.
-# The algorithm uses inverse warping with bilinear interpolation.
-# Forward warping will generally reduce quality. Other types of
-# interpolation, such as Lanczos, will work, but may be slower.
-def warp_H(im, dst, H):
-    """
-    - im:  a 2D or 3D NumPy array representing an image.
-    - dst: a 2D or 3D NumPy array corresponding to the space where
-           `im` should be warped to.
-    - H:   a 3x3 matrix representing the homography that should be applied
-           to go from `im` to `dst`.
-    """
+        # If the focal length is not known, estimate an ideal focal length.
+        if self.f is None:
+            f = self.d / (2 * sz if sz != 0 else 1)
+        else:
+            f = self.f
 
-    # Get a meshgrid correpsonding to the discrete
-    # coordinate values of the destination space.
-    meshgrid = create_meshgrid(dst)
+        # The camera 2D-to-3D-Projection Matrix.
+        X = np.array([
+                     [1,         0, -self.w/2],
+                     [0,         1, -self.h/2],
+                     [0,         0,         1],
+                     [0,         0,         1]
+                     ])
 
-    # Invert the homography, to use the inverse warping.
-    H = np.linalg.pinv(H)
+        # The Matrix representing the rotation around the x-axis.
+        Rx = np.array([
+                     [1,         0,         0,         0],
+                     [0,        cx,       -sx,         0],
+                     [0,        sx,        cx,         0],
+                     [0,         0,         0,         1]
+                     ])
 
-    # Apply the inverted homography to the mehsgrid, to compute
-    # the position that each discrete block (aka. pixel) in the
-    # destination space maps to in the image space (`im`).
-    meshgrid = np.matmul(H, meshgrid)
+        # The Matrix representing the rotation around the z-axis.
+        Rz = np.array([
+                     [cz,      -sz,         0,         0],
+                     [sz,       cz,         0,         0],
+                     [0,         0,         1,         0],
+                     [0,         0,         0,         1]
+                     ])
 
-    # Define the x and y maps for the interpolation function.
-    map_x, map_y = meshgrid[:-1] / meshgrid[-1]
-    h, w = dst.shape[:2]
-    map_x = map_x.reshape(h, w).astype(np.float32)
-    map_y = map_y.reshape(h, w).astype(np.float32)
+        # The "total" 3D-Rotation Matrix.
+        R = Rx @ Rz
 
-    # Interpolate the Homography-transformed meshgrid to get the
-    # color corresponding to each pixel in the transformed image.
-    im_out = cv2.remap(im, map_x, map_y, cv2.INTER_LINEAR,
-                       borderMode=cv2.BORDER_CONSTANT)
-    im_out = np.clip(im_out, 0., 1.)
+        # The Translation Matrix.
+        T = np.identity(4)
+        T[2][3] = f
 
-    return im_out
+        # The camera Intrinsic Matrix.
+        K = np.array([
+                     [f,         0,  self.w/2,         0],
+                     [0,         f,  self.h/2,         0],
+                     [0,         0,         1,         0]
+                     ])
 
+        # The Perspective Transformation Matrix.
+        perspective = K @ T @ R @ X
 
-# Warp an image using a 3D-Rotational model, rather than a homgoraphy.
-# TODO: description
-# TODO: find focal_length
-# NOTE: im must be b&w
-def warp_3D(im, pitch=0, roll=0):
+        # NOTE: The interpolation can be changed to INTER_LINEAR if too slow.
+        im = cv2.warpPerspective(im.copy(), perspective, (self.w, self.h),
+                                 flags=cv2.INTER_LANCZOS4)
 
-    # The image dimensions.
-    # TODO: make class variables
-    h = im.shape[0]
-    w = im.shape[1]
+        return im
 
-    # The ideal focal length.
-    d = np.sqrt(h**2 + w**2)
-    cx = np.cos(pitch)
-    sx = np.sin(pitch)
-    cz = np.cos(roll)
-    sz = np.sin(roll)
-    f = d / (2 * sz if sz != 0 else 1)
+    # Return the highest value of each colun of the given image.
+    # If `im` is a 2D depth map, this reduces it down to a 1D array of depths.
+    def maxpool_columns(im):
+        return np.max(im, axis=0)
 
-    # The camera 2D-to-3D-Projection Matrix.
-    X = np.array([
-                 [1,    0, -w/2],
-                 [0,    1, -h/2],
-                 [0,    0,    1],
-                 [0,    0,    1]
-                 ])
-
-    # The Matrix representing the rotation around the x-axis.
-    Rx = np.array([
-                 [1,    0,    0,    0],
-                 [0,   cx,  -sx,    0],
-                 [0,   sx,   cx,    0],
-                 [0,    0,    0,    1],
-                 ])
-
-    # The Matrix representing the rotation around the z-axis.
-    Rz = np.array([
-                 [cz, -sz,    0,    0],
-                 [sz,  cz,    0,    0],
-                 [0,    0,    1,    0],
-                 [0,    0,    0,    1],
-                 ])
-
-    # The "total" 3D-Rotation Matrix.
-    R = Rx @ Rz
-
-    # The Translation Matrix.
-    T = np.identity(4)
-    T[2][3] = f
-
-    # The camera Intrinsic Matrix.
-    K = np.array([
-                 [f,    0,  w/2,    0],
-                 [0,    f,  h/2,    0],
-                 [0,    0,    1,    0]
-                 ])
-
-    perspective = K @ T @ R @ X
-
-    # TODO: change to cv2.INTER_LINEAR if too slow.
-    # TODO: return only part of the image.
-    im = cv2.warpPerspective(im.copy(), perspective, (w, h), flags=cv2.INTER_LANCZOS4)
-    return im
 
 #####
 # im = imread("roll-yaw-pitch.png")
 # im0 = im[:, :, 0]
-out = warp_3D(im0, np.pi/4, np.pi/4)
-imshow(out)
+# out = warp_3D(im0, np.pi/4, np.pi/4)
+# imshow(out)
 #####
-
-
-def create_depth_map(depth_image, roll=0, pitch=0):
-    pass
