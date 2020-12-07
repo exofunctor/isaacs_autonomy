@@ -7,7 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 
 # This class receives a ROS image type and converts it
 # to a NumPy and OpenCV compatible format.
-class CameraStream:
+class StreamCamera:
 
     def __init__(self, topic, encoding="bgr8"):
 
@@ -33,7 +33,7 @@ class CameraStream:
         self.bridge = CvBridge()
 
         # The subscriber, listening to an Image topic.
-        self.image_sub = rospy.Subscriber(topic, Image, self.callback)
+        self.camera_sub = rospy.Subscriber(topic, Image, self.callback)
 
     def callback(self, data):
         try:

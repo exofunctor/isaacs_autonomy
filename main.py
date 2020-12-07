@@ -4,9 +4,10 @@ import rospy
 import roslib
 roslib.load_manifest('isaacs_autonomy')
 
-from position_stream import PositionStream
-from attitude_stream import AttitudeStream
-from camera_stream import CameraStream
+from stream_position import StreamPosition
+from stream_attitude import StreamAttitude
+from stream_camera import StreamCamera
+
 from depth_map import DepthMap
 from grid import Grid
 from segmentation import Segmentation
@@ -18,12 +19,14 @@ def main(args):
 
     mission_accomplished = False
 
+    # position_topic = "/dji_sdk/gps_position"
     position_topic = "/dji_sdk/rtk_position"
     attitude_topic = "/dji_sdk/attitude"
     disparity_topic = "/dji_sdk/stereo_240p_front_depth_images"
     segmentation_topic = "/dji_sdk/fpv_camera_images"
 
-    position_stream = PositionStream(position_topic)
+
+    stream_position = StreamPosition(position_topic)
     attitude_stream = AttitudeStream(attitude_topic)
     disparity_stream = CameraStream(disparity_topic)
     segmentation_stream = CameraStream(segmentation_topic)

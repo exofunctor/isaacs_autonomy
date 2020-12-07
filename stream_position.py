@@ -7,7 +7,7 @@ import pymap3d as pm
 
 # Stream the attitude of the UAV. TODO: M210 diameter
 # RATE: ? hz TODO
-class PositionStream:
+class StreamPosition:
     def __init__(self, topic, UAV_diameter=0.8):
         """
         - topic:    The topic to subscribe to and output as a stream.

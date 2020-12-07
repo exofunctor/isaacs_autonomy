@@ -6,7 +6,7 @@ import numpy as np
 
 # Stream the attitude of the UAV.
 # RATE: 100 hz
-class AttitudeStream:
+class StreamAttitude:
     def __init__(self, topic):
         """
         - topic: The topic to subscribe to and output as a stream.
