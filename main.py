@@ -1,6 +1,9 @@
 import sys
 import rospy
 
+import roslib
+roslib.load_manifest('isaacs_autonomy')
+
 from position_stream import PositionStream
 from attitude_stream import AttitudeStream
 from camera_stream import CameraStream
@@ -43,3 +46,20 @@ def main(args):
 if __name__ == '__main__':
     # args: radius
     main(sys.argv)
+
+
+def main():
+    attitude_stream = AttitudeStream("/dji_sdk/attitude")
+    camera_stream = CameraStream("/dji_sdk/stereo_240p_front_depth_images")
+    print(attitude_stream.euler_angles)
+    print(camera_stream)
+    rospy.init_node("isaacs_autonomy", anonymous=True)
+    try:
+        #print(self.euler_angles)
+        rospy.spin()
+    except KeyboardInterrupt:
+        print("Shutting down...")
+
+
+if __name__ == '__main__':
+    main()
