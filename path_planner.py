@@ -2,6 +2,8 @@ import rospy
 import numpy as np
 import dji_control
 
+# TODO: make a class with .explore() method
+
 max_x = 20
 max_y = 20
 threshold = 0.3
