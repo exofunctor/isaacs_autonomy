@@ -99,7 +99,7 @@ class Explorer:
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
     def update_map(self, verbose=False):
-        disparity = np.zeros((240, 240))
+        disparity = 5*np.ones((240, 240))
         self.DepthMap.update(
                              disparity,
                              #self.StreamDisparity.image,
@@ -131,7 +131,7 @@ class Explorer:
         max_x = self.Grid.grid.shape[1] #2*radius
         max_z = self.Grid.grid.shape[0] #2*radius
         #threshold = 0.3
-        threshold = -0.1
+        threshold = -np.inf
         self.traversed = np.zeros((max_x, max_z))
         x = self.StreamPosition.x
         z = self.StreamPosition.z
@@ -214,7 +214,7 @@ class Explorer:
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
-            set_z(desired_z - z)
+            self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
 
@@ -235,7 +235,7 @@ class Explorer:
         self.rotate((3/2)*np.pi)
         #TODO: move
         while(abs(desired_x - x) > 0.2):
-            set_x(desired_x - x)
+            self.set_x(desired_x - x)
             x = self.StreamPosition.x
         self.set_x(0)
 
@@ -284,6 +284,7 @@ class Explorer:
         return
 
     def rotate(self, desired_yaw):
+        return
         print("rotating to ", desired_yaw, "radians")
         error = (np.pi)/16
         yaw = self.StreamAttitude.yaw_y

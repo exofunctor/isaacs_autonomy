@@ -89,6 +89,7 @@ class Grid:
         max_depth = int(np.max(depth_map) + 1)
         box_len = 2*max_depth + 1
         box = np.zeros((box_len, box_len)).astype(self.grid.dtype)
+        print(box.shape)
 
         o_points = np.stack([o_x, o_z]).T
         o_points = o_points - np.array([x-max_depth, z-max_depth])
@@ -107,17 +108,21 @@ class Grid:
         # Edge case: on an edge.
         x1 = x - max_depth
         if x1 < 0:
-            box = box[-x1:, :]
+            print("x1 exception")
+            box = box[:, -x1:]
             x1 = 0
         x2 = x + max_depth + 1
         z1 = z - max_depth
         if z1 < 0:
-            box = box[:, -z1:]
+            print("z1 exception")
+            box = box[-z1:, :]
+            print(box.shape)
             z1 = 0
         z2 = z + max_depth + 1
         # self.grid[] = self.grid[] + box
         # print(self.grid[0:5, x1:x2])
         # print(x1, x2, z1, z2)
+        print(z1, z2, x1, x2)
         self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box
 
         if verbose:
