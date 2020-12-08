@@ -147,7 +147,7 @@ class Explorer:
             print("Failed to take off")
 
         def is_open(x, z):
-            if x < 0 or z < 0 or x > max_x or z > max_z:
+            if x < 0 or z < 0 or x >= max_x or z >= max_z:
                 return False
             if self.traversed[x, z] > 0:
                 return False
@@ -248,7 +248,7 @@ class Explorer:
             print("current x: ", x)
             print("trying to go to: ", desired_x)
             print("Going left.")
-            self.set_x(desired_x - x)
+            self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
 
@@ -268,7 +268,7 @@ class Explorer:
             print("current x: ", x)
             print("trying to go to: ", desired_x)
             print("Going right.")
-            self.set_x(desired_x - x)
+            self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
         self.traversed[desired_x, desired_z] = 1
