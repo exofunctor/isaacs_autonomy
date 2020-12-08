@@ -101,29 +101,22 @@ class Explorer:
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
-    def update_map(self, verbose=False):
+    def update_map(self, verbose=True):
         disparity = 5*np.ones((240, 240))
-        self.DepthMap.update(
-                             disparity,
+        self.DepthMap.update(disparity,
                              #self.StreamDisparity.image,
                              self.StreamAttitude.pitch_x,
                              self.StreamAttitude.roll_z,
                              self.disparity_focal_length,
-                             verbose
-                             )
+                             #verbose
+                             False)
 
-        self.Grid.update(
-                         self.DepthMap.depth_map,
+        self.Grid.update(self.DepthMap.depth_map,
                          self.disparity_FOV,
                          self.StreamAttitude.yaw_y,
                          self.StreamPosition.x,
                          self.StreamPosition.z,
-                         verbose
-                         )
-
-
-    # TODO, TODO: thread 1, SEMANTIC SEGMENTATION CODE
-    # TODO, TODO: thread 2, PATH PLANING CODE and UPDATE GRID CODE
+                         True)
 
     # The mission has been accomplished. Time to land!
     # print("Mission accomplished!")
@@ -155,7 +148,7 @@ class Explorer:
             if self.traversed[int(x), int(z)] > 0:
                 print("x: ", int(x), "z: ", int(z), "is OCCUPIED/TRAVELED")
                 return False
-            occupied = self.Grid.grid[x, z]
+            occupied = self.Grid.grid[int(x), int(z)]
             if occupied == 0:
                 #rotate and update map
                 curr_x = self.StreamPosition.x
@@ -163,7 +156,7 @@ class Explorer:
                 #TODO: calculate angle between curr and deisred
                 #TODO: rotate so we face desired
                 #TODO #self.update_map() uncomment this after implementing previous 2 comments
-                occupied = self.Grid.grid[x, z]
+                occupied = self.Grid.grid[int(x), int(z)]
             print("x: ", x, "z: ", z, "is OPEN. going there next")
             return  occupied > threshold #returns false if occupied = 0 for safety reasons
 

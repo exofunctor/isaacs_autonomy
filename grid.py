@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 import numpy as np
 import cv2
-
+import matplotlib.pyplot as plt
 
 class Grid:
 
     def __init__(self, radius):
         self.radius = radius
-        radius = int(2*radius)
-        self.grid = np.zeros((radius, radius), dtype=np.int16)
+        radius = int(2 * radius) / 100
+        self.grid = np.zeros((radius, radius), dtype=np.uint8)
 
     # TODO: description and parameters.
     # NOTE: camera_FOV and yaw must be in radians
     def update(self, depth_map, camera_FOV, yaw, x, z, verbose=False):
+        print("~~~~~~~~~~~~~~~: " + str(self.grid.shape))
 
         # TODO: use self variables instead
 
@@ -123,12 +124,25 @@ class Grid:
         # print(self.grid[0:5, x1:x2])
         # print(x1, x2, z1, z2)
         print(z1, z2, x1, x2)
-        self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box
+        print(self.grid.shape)
+        print(box.shape)
+        self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box.astype(np.uint8)
 
         if verbose:
-            cv2.imshow("Grid", self.grid/255.)
-            cv2.waitKey(1)
-            # cv2.destroyAllWindows()
+            #cv2.destroyAllWindows()
+            print(self.grid)
+            print(self.grid.shape)
+            cv2.namedWindow("Grid", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("Grid", 600,600)
+            cv2.imshow("Grid", 3*self.grid)
+            #cv2.waitKey(1) & 0xFF == ord('q')
+            #    break
+
+            cv2.waitKey(3)
+            #plt.close()
+            #plt.imshow(self.grid, cmap='gray')
+            #plt.show()
+            #cv2.destroyAllWindows()
 
         # print(points)
         # cv2.fillPoly(self.grid, [points], 1, 16)
@@ -171,8 +185,8 @@ class Grid:
 
 
 ##
-grid = Grid(10)
-depth_map = 7*np.ones(9)
+#grid = Grid(10)
+#depth_map = 7*np.ones(9)
 # depth_map[0] = 9
 # depth_map[1] = 0
 # depth_map[2] = 0
@@ -182,9 +196,9 @@ depth_map = 7*np.ones(9)
 # depth_map[6] = 0
 # depth_map[7] = 0
 # depth_map[7] = 4
-camera_FOV = np.pi/3
-yaw = np.pi/4
-x = 3
-z = 3
-out = grid.update(depth_map, camera_FOV, yaw, x, z, verbose=True)
+#camera_FOV = np.pi/3
+#yaw = np.pi/4
+#x = 3
+#z = 3
+#out = grid.update(depth_map, camera_FOV, yaw, x, z, verbose=True)
 # print(out)
