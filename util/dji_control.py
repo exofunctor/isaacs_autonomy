@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Joy
 from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
@@ -7,25 +8,34 @@ import math
 
 
 def main():
+    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
     rospy.init_node('control_planner')
-    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, )
 
-    get_auth = rospy.ServiceProxy("dji_sdk/sdk_control_authority", SDKControlAuthority)
+    get_auth = rospy.ServiceProxy("/dji_sdk/sdk_control_authority", SDKControlAuthority)
     control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
 
-    set_auth(1)
+    got_auth = get_auth(1)
+    if (got_auth):
+        print("got authority")
+    else:
+        print("failed to get authority")
+        
+    #takeoff
+    control(4)
 
     r = rospy.Rate(10)
     msg = Joy()
     while not rospy.is_shutdown():
-        input = raw_input("Enter control command")
+        input = raw_input("Enter control command: ")
+        print(input)
         #wasd = move forward/back/left/right
         #i/k = up/down
         #j/l =rotate left/right
         #t/g = takeoff/land
         if (input == "1"):
             msg.axes = [10, 0, 10, 0]
-            print("move forward 10 in x, at height 10. only publish once")
+            print("w: move forward 10 in x, at height 10. only publish once")
+
         elif (input == "2"):
             msg.axes = [2, 0, 10, 0]
             print("move forward by 2 in x, at height 10. publish 30 times")
@@ -45,6 +55,7 @@ def main():
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
+
         elif (input == "w"):
             msg.axes = [2, 0, 10, 0]
             print("w: move forward in x")
@@ -71,10 +82,12 @@ def main():
             print("k: decrease height")
         elif (input == "t"):
             print("takeoff")
-            takeoff()
+            control(4)
+            #takeoff()
         elif (input == "g"):
             print("landing")
-            land()
+            control(6)
+            #land()
         else:
             msg.axes = [0, 0, 0, 0]
             print("incorrect input: sending stop command")
@@ -84,14 +97,15 @@ def main():
         r.sleep()
 
 
-def set_auth(status):
-    get_auth(status)
+#def set_auth(status):
+#    get_auth(status)
 
-def takeoff():
-    control(4)
+#def takeoff():
+#    control(4)
 
-def land():
-    control(6)
+#def land():
+#    control(6)
+
 
 if __name__ == '__main__':
     main()

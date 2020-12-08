@@ -111,7 +111,7 @@ class Explorer:
                          self.StreamPosition.z,
                          verbose
                          )
-            self.update_map(True)
+            #self.update_map(True)
         except KeyboardInterrupt:
             print("Shutting down...")
             exit
