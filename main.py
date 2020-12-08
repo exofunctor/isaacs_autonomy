@@ -217,6 +217,8 @@ class Explorer:
         while(abs(desired_z - z) > 0.2):
             print("current z: ", z)
             print("trying to go to: ", desired_z)
+            print("max_x: ", max_x)
+            print("max_z: ", max_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
