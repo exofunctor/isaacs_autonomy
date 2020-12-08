@@ -47,6 +47,17 @@ class Explorer:
 
         # Initialize a depth map.
         self.DepthMap = DepthMap()
+
+        # Initialize a geographical search grid.
+        self.Grid = Grid(search_radius)
+
+        # Update the map with the initial measurements.
+        self.update_map()
+
+    # Call this function to update the map that the UAV uses to navigate.
+    # Ideally, it should be called every time that the UAV advances a tile,
+    # or when it performs a sharp turn.
+    def update_map(self):
         self.DepthMap.update(
                              self.disparity.image,
                              self.StreamAttitude.pitch_x,
@@ -54,8 +65,6 @@ class Explorer:
                              self.disparity_focal_length
                              )
 
-        # Initialize a geographical search grid.
-        self.Grid = Grid(search_radius)
         self.Grid.update(
                          self.DepthMap.depth_map,
                          self.disparity_FOV,
@@ -64,12 +73,13 @@ class Explorer:
                          self.StreamPosition.z
                          )
 
-        # TODO, TODO: thread 1, SEMANTIC SEGMENTATION CODE
-        # TODO, TODO: thread 2, PATH PLANING CODE and UPDATE GRID CODE
 
-        # The mission has been accomplished. Time to land!
-        # print("Mission accomplished!")
-        # TODO: /dji_sdk/drone_task_control 6
+    # TODO, TODO: thread 1, SEMANTIC SEGMENTATION CODE
+    # TODO, TODO: thread 2, PATH PLANING CODE and UPDATE GRID CODE
+
+    # The mission has been accomplished. Time to land!
+    # print("Mission accomplished!")
+    # TODO: /dji_sdk/drone_task_control 6
 
 
 # Start the Exploration.
