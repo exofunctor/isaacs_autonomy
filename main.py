@@ -10,6 +10,7 @@ from grid import Grid
 
 from sensor_msgs.msg import Joy
 from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
+from isaacs_autonomy.srv import Search
 
 import time
 
@@ -219,7 +220,7 @@ class Explorer:
         print("moving forward, from z=", z, " to z=", desired_z)
 
         #first, rotate so we are facing up(forwards)
-        self.rotate(np.pi)
+        self.rotate(0)
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
@@ -283,7 +284,7 @@ class Explorer:
         z = self.StreamPosition.z
         print("moving backwards, from z=", z, " to z=", desired_z)
         #rotate
-        self.rotate(0)
+        self.rotate(np.pi)
         #move
         while(abs(desired_z - z) > 0.2):
             #print("current z: ", z)
@@ -312,7 +313,7 @@ class Explorer:
         while (yaw < desired_yaw - error or yaw > desired_yaw + error):
             print("current yaw is ", yaw)
             print("setting yaw to ", desired_yaw)
-            self.set_yaw(desired_yaw) #if our yaw is lower, we increase it. if its too high, we decrease it
+            self.set_yaw(desired_yaw + error) #if our yaw is lower, we increase it. if its too high, we decrease it
             yaw = self.StreamAttitude.yaw_y
         self.set_yaw(0) #stop rotating
         return
@@ -355,6 +356,15 @@ def main(args):
     except KeyboardInterrupt:
         print("Shutting down...")
 
-
 if __name__ == '__main__':
-    main(sys.argv)
+    #main(sys.argv)
+    alternate_main()
+
+def alternate_main():
+    serv = rospy.Service("start_search", Search, handle_search)
+
+def handle_search(req):
+    dummy = 0
+    args=[dummy, req.radius]
+    main(args)
+    return True
