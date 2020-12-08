@@ -42,10 +42,14 @@ class Explorer:
         self.disparity_FOV = disparity_FOV
         self.topic_segmentation = topic_segmentation
 
-        # Start the sensor streamers.
+        # Start the sensor streamers. TODO TODO: synchronize at 10 hz
+        # TODO: ? hz
         self.StreamPosition = StreamPosition(topic_position, UAV_diameter)
+        # 100 hz
         self.StreamAttitude = StreamAttitude(topic_attitude)
+        # 10 hz
         self.StreamDisparity = StreamCamera(topic_disparity, "mono8")
+        # TODO: ? hz
         self.StreamSegmentation = StreamCamera(topic_segmentation, "bgr8")
 
         # Initialize a depth map.
@@ -55,17 +59,18 @@ class Explorer:
         self.Grid = Grid(search_radius)
 
         # Update the map with the initial measurements.
-        self.update_map()
+        self.update_map(verbose=True)
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
-    def update_map(self):
+    def update_map(self, verbose=False):
         self.DepthMap.update(
                              self.disparity.image,
                              self.StreamAttitude.pitch_x,
                              self.StreamAttitude.roll_z,
-                             self.disparity_focal_length
+                             self.disparity_focal_length,
+                             verbose=verbose
                              )
 
         self.Grid.update(
@@ -73,7 +78,8 @@ class Explorer:
                          self.disparity_FOV,
                          self.StreamAttitude.yaw_y,
                          self.StreamPosition.x,
-                         self.StreamPosition.z
+                         self.StreamPosition.z,
+                         verbose=verbose
                          )
 
 
