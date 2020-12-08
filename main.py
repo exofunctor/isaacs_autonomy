@@ -111,7 +111,7 @@ class Explorer:
                          self.StreamPosition.z,
                          verbose
                          )
-            self.update_map(True)
+            #self.update_map(True)
         except KeyboardInterrupt:
             print("Shutting down...")
             exit
@@ -125,8 +125,8 @@ class Explorer:
     # TODO: /dji_sdk/drone_task_control 6
 
     def explore(self):
-        max_x = self.Grid.grid.shape(1) #2*radius
-        max_z = self.Grid.grid.shape(0) #2*radius
+        max_x = self.Grid.grid.shape[1] #2*radius
+        max_z = self.Grid.grid.shape[0] #2*radius
         threshold = 0.3
         self.traversed = np.zeros((max_x, max_z))
         position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
