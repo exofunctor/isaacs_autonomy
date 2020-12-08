@@ -51,6 +51,7 @@ class Explorer:
         self.disparity_FOV = disparity_FOV
         self.topic_segmentation = topic_segmentation
         self.height = 1.2
+        self.radius = search_radius
 
         # Start the sensor streamers. TODO TODO: synchronize at 10 hz
         # TODO: ? hz
@@ -129,8 +130,10 @@ class Explorer:
 
     def explore(self):
         print("beginning search")
-        max_x = self.Grid.grid.shape[1] #2*radius
-        max_z = self.Grid.grid.shape[0] #2*radius
+        max_x = self.radius * 2
+        max_z = self.radius * 2
+        #max_x = self.Grid.grid.shape[1] #2*radius
+        #max_z = self.Grid.grid.shape[0] #2*radius
         #threshold = 0.3
         threshold = -np.inf
         self.traversed = np.zeros((max_x, max_z))
@@ -159,6 +162,8 @@ class Explorer:
 
         def flood_fill(x,z):
             try:
+                print("max_x: ", max_x)
+                print("max_z: ", max_z)
                 if self.check_mission_accomplished():
                     return
                 self.update_map()
@@ -217,8 +222,6 @@ class Explorer:
         while(abs(desired_z - z) > 0.2):
             print("current z: ", z)
             print("trying to go to: ", desired_z)
-            print("max_x: ", max_x)
-            print("max_z: ", max_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
