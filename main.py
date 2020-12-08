@@ -130,8 +130,8 @@ class Explorer:
 
     def explore(self):
         print("beginning search")
-        max_x = self.radius * 2
-        max_z = self.radius * 2
+        max_x = int(2*self.radius)
+        max_z = int(2*self.radius)
         #max_x = self.Grid.grid.shape[1] #2*radius
         #max_z = self.Grid.grid.shape[0] #2*radius
         #threshold = 0.3
