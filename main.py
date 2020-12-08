@@ -30,6 +30,9 @@ class Explorer:
                  topic_segmentation="/dji_sdk/fpv_camera_images",
                  ):
 
+        # When the delivery target has been found, this will turn True.
+        self.mission_accomplished = False
+
         # Store the model's parameters.
         self.UAV_diameter = UAV_diameter
         self.topic_position = topic_position
