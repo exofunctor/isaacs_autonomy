@@ -130,13 +130,15 @@ class Explorer:
 
     def explore(self):
         print("beginning search")
-        max_x = int(2*self.radius)
-        max_z = int(2*self.radius)
+        #max_x = int(2*self.radius)
+        #max_z = int(2*self.radius)
+        max_x = 6
+        max_z = 6
         #max_x = self.Grid.grid.shape[1] #2*radius
         #max_z = self.Grid.grid.shape[0] #2*radius
         #threshold = 0.3
         threshold = -np.inf
-        self.traversed = np.zeros((max_x, max_z))
+        self.traversed = np.zeros((max_x+4, max_z+4))
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         if (self.takeoff()):
@@ -242,9 +244,10 @@ class Explorer:
 
         self.rotate((3/2)*np.pi)
         #TODO: move
-        while(abs(desired_x - x) > 0.2):
+        while(abs(x - desired_x) > 0.2):
             print("current x: ", x)
             print("trying to go to: ", desired_x)
+            print("Going left.")
             self.set_x(desired_x - x)
             x = self.StreamPosition.x
         self.set_x(0)
@@ -261,9 +264,10 @@ class Explorer:
         #rotate
         self.rotate((1/2)*np.pi)
         #move
-        while(abs(desired_x - x) > 0.2):
+        while(abs(x - desired_x) > 0.2):
             print("current x: ", x)
             print("trying to go to: ", desired_x)
+            print("Going right.")
             self.set_x(desired_x - x)
             x = self.StreamPosition.x
         self.set_x(0)
