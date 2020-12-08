@@ -12,16 +12,21 @@ from path_planner import PathPlanner
 # roslib.load_manifest('isaacs_autonomy')
 
 
+# Matrice 210 Specifications:
+# - Diameter: 0.887 meters
+# - Forward Horizontal FOV: 60 degrees
+# - Forward Vertical FOV: 54 degrees
+# - Forward Sensing Range: 0.7-30 meters
 class Explorer:
 
     def __init__(self,
                  search_radius,
-                 UAV_diameter=0.8,
+                 UAV_diameter=0.887,
                  topic_position="/dji_sdk/gps_position",
                  topic_attitude="/dji_sdk/attitude",
                  topic_disparity="/dji_sdk/stereo_240p_front_depth_images",
                  disparity_focal_length=None,
-                 disparity_FOV=np.pi/4,
+                 disparity_FOV=np.pi/3,
                  topic_segmentation="/dji_sdk/fpv_camera_images",
                  ):
 

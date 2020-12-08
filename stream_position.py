@@ -5,10 +5,10 @@ import numpy as np
 import pymap3d as pm
 
 
-# Stream the attitude of the UAV. TODO: M210 diameter
+# Stream the attitude of the UAV.
 # RATE: ? hz TODO
 class StreamPosition:
-    def __init__(self, topic, UAV_diameter=0.8):
+    def __init__(self, topic, UAV_diameter=0.887):
         """
         - topic:    The topic to subscribe to and output as a stream.
                     On the M210, this is either:
@@ -16,7 +16,7 @@ class StreamPosition:
                         - /dji_sdk/rtk_position
 
         - diameter: The diameter of the UAV, in meters.
-                    The diameter of the M210 is .............................
+                    The diameter of the M210 is 0.887 meters.
         """
 
         self.topic = topic
