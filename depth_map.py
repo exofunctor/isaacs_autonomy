@@ -31,7 +31,7 @@ class DepthMap:
     # TODO: sketch
     def warp3D(self, im, pitch, roll, f=None):
 
-        # The depth iamge dimensions.
+        # The depth image dimensions.
         h = im.shape[0]
         w = im.shape[1]
 

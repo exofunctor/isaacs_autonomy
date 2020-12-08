@@ -27,9 +27,9 @@ class StreamPosition:
 
         # The initial readings of the subscriber, in WGS84 coordinates,
         # from where the UAV started.
-        self.init_lat
-        self.init_lon
-        self.init_alt
+        self.init_lat = 0
+        self.init_lon = 0
+        self.init_alt = 0
 
         # The current readings of the subscriber, in ENU xzy,
         # These are normalized according to the initial position;
