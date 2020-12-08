@@ -4,14 +4,10 @@ import cv2
 
 class Grid:
 
-    def __init__(self, radius, attitude_stream, position_stream, camera_FOV):
-        length = self.radius2length(radius)
-        self.grid = np.zeros((length, length), dtype=np.int16)
-
-    # Convert the given radius into an appropriate computatonal length.
-    def radius2length(self, radius):
-        length = np.int(radius)  # TODO: adjust for relative size
-        return length
+    def __init__(self, radius):
+        self.radius = radius
+        radius *= 2
+        self.grid = np.zeros((radius, radius), dtype=np.int16)
 
     # TODO: description and parameters.
     # NOTE: camera_FOV and yaw must be in radians
@@ -164,8 +160,8 @@ class Grid:
 
 
 ##
-grid = Grid(20)
-depth_map = 7*np.ones(9)
+# grid = Grid(20)
+# depth_map = 7*np.ones(9)
 # depth_map[0] = 9
 # depth_map[1] = 0
 # depth_map[2] = 0
@@ -175,9 +171,9 @@ depth_map = 7*np.ones(9)
 # depth_map[6] = 0
 # depth_map[7] = 0
 # depth_map[7] = 4
-camera_FOV = np.pi/2
-yaw = np.pi/4
-x = 3
-z = 3
-out = grid.update_grid(depth_map, camera_FOV, yaw, x, z)
-print(out)
+# camera_FOV = np.pi/2
+# yaw = np.pi/4
+# x = 3
+# z = 3
+# out = grid.update_grid(depth_map, camera_FOV, yaw, x, z)
+# print(out)
