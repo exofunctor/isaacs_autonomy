@@ -7,7 +7,7 @@ class Grid:
 
     def __init__(self, radius):
         self.radius = radius
-        radius *= 2
+        radius = int(2*radius)
         self.grid = np.zeros((radius, radius), dtype=np.int16)
 
     # TODO: description and parameters.
