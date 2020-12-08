@@ -149,7 +149,8 @@ class Explorer:
         def is_open(x, z):
             if x < 0 or z < 0 or x >= max_x or z >= max_z:
                 return False
-            if self.traversed[x, z] > 0:
+            if self.traversed[int(x), int(z)] > 0:
+                print("x: ", x, "z: ", z, "is occupied")
                 return False
             occupied = self.Grid.grid[x, z]
             if occupied == 0:
@@ -160,6 +161,7 @@ class Explorer:
                 #TODO: rotate so we face desired
                 #TODO #self.update_map() uncomment this after implementing previous 2 comments
                 occupied = self.Grid.grid[x, z]
+            print("x: ", x, "z: ", z, "is free")
             return  occupied > threshold #returns false if occupied = 0 for safety reasons
 
         def flood_fill(x,z):
