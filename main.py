@@ -166,7 +166,7 @@ class Explorer:
                 self.move_left()
             if is_open(x-1, z):
                 self.move_left()
-                flood_fill(x-1,z)
+                flood_fill(x-1, z)
                 if self.check_mission_accomplished():
                     return
                 self.move_right()
@@ -202,19 +202,20 @@ class Explorer:
 
     def move_up(self):
         #need to go from (x,z) to (x,z+1)
+        print("moving forward")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         desired_x = x
         desired_z = z + 1
 
         #first, rotate so we are facing up(forwards)
-        rotate(math.pi)
+        self.rotate(math.pi)
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
             set_z(desired_z - z)
             z = self.StreamPosition.z
-        set_z(0)
+        self.set_z(0)
 
         #update traversal matrix
         self.traversed[desired_x, desired_z] = 1
@@ -224,59 +225,63 @@ class Explorer:
 
     def move_left(self):
         #need to go from (x,z) to (x-1, z)
+        print("moving left")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         desired_x = x - 1
         desired_z = z
 
-        rotate((3/2)*math.pi)
+        self.rotate((3/2)*math.pi)
         #TODO: move
         while(abs(desired_x - x) > 0.2):
             set_x(desired_x - x)
             x = self.StreamPosition.x
-        set_x(0)
+        self.set_x(0)
 
         self.traversed[desired_x, desired_z] = 1
         self.update_map()
 
     def move_right(self):
+        print("moving right")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         desired_x = x + 1
         desired_z = z
         #rotate
-        rotate((1/2)*math.pi)
+        self.rotate((1/2)*math.pi)
         #move
         while(abs(desired_x - x) > 0.2):
-            set_x(desired_x - x)
+            self.set_x(desired_x - x)
             x = self.StreamPosition.x
-        set_x(0)
+        self.set_x(0)
         self.traversed[desired_x, desired_z] = 1
         self.update_map()
 
     def move_down(self):
+        print("moving backwards")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         desired_x = x
         desired_z = z - 1
         #rotate
-        rotate(0)
+        self.rotate(0)
         #move
         while(abs(desired_z - z) > 0.2):
-            set_z(desired_z - z)
+            self.set_z(desired_z - z)
             z = self.StreamPosition.z
-        set_z(0)
+        self.set_z(0)
 
         self.traversed[desired_x, desired_z] = 1
         self.update_map()
 
     def rotate(self, desired_yaw):
+        print("rotating to ", desired_yaw, "radians")
         error = (math.pi)/16
         yaw = self.StreamAttitude.yaw_y
         while (yaw < desired_yaw - error or yaw > desired_yaw + error:
             set_yaw(desired_yaw - yaw) #if our yaw is lower, we increase it. if its too high, we decrease it
             yaw = self.StreamAttitude.yaw_y
-        set_yaw(0) #stop rotating
+        self.set_yaw(0) #stop rotating
         return
 
     def set_yaw(self, change): #might need to multiply the change value
