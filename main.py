@@ -87,7 +87,11 @@ class Explorer:
         self.update_map(True)
         print("[INFO]: World Model OK")
 
-        self.set_auth(1)
+        if (self.set_auth(1)):
+            print("got SDK authority")
+        else:
+            print("failed to obtain authority")
+
         self.explore()
 
     # Call this function to update the map that the UAV uses to navigate.
@@ -125,51 +129,49 @@ class Explorer:
     # TODO: /dji_sdk/drone_task_control 6
 
     def explore(self):
+        print("beginning search")
         max_x = self.Grid.grid.shape[1] #2*radius
         max_z = self.Grid.grid.shape[0] #2*radius
         threshold = 0.3
         self.traversed = np.zeros((max_x, max_z))
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        if (self.takeoff()):
+            print("Taking off")
+        else:
+            print("Failed to take off")
 
         def flood_fill(x,z):
-            if self.mission_accomplished:
-                land()
-                set_auth(0)
+            if self.check_mission_accomplished():
                 return
             self.update_map()
             if is_open(x, z+1):
-                move_up()
+                self.move_up()
                 flood_fill(x,z+1)
-                if self.mission_accomplished:
-                    land()
-                    set_auth(0)
+                if self.check_mission_accomplished():
                     return
-                move_backward()
+                self.move_down()
                 #need to come back to where we started from, because we can't jump around the map
             if is_open(x, z-1):
-                move_down()
+                self.move_down()
                 flood_fill(x,z-1)
-                if self.mission_accomplished:
-                    land()
-                    set_auth(0)
+                if self.check_mission_accomplished():
                     return
-                move_up()
+                self.move_up()
             if is_open(x+1, z):
-                move_right()
+                self.move_right()
                 flood_fill(x+1,z)
-                if self.mission_accomplished:
-                    land()
-                    set_auth(0)
+                if self.check_mission_accomplished():
                     return
-                move_left()
+                self.move_left()
             if is_open(x-1, z):
-                move_left()
-                flood_fill(x,y-1)
-                if self.mission_accomplished:
-                    land()
-                    set_auth(0)
+                self.move_left()
+                flood_fill(x-1,z)
+                if self.check_mission_accomplished():
                     return
-                move_right()
+                self.move_right()
             return
+
 
         def is_open(self, x,z):
             if x < 0 or z < 0 or x > max_x or z > max_z:
@@ -187,14 +189,16 @@ class Explorer:
                 occupied = self.Grid.grid[x, z]
             return  occupied > threshold #returns false if occupied = 0 for safety reasons
 
+        flood_fill(x, z)
+
     def set_auth(self, status):
-        self.get_auth(status)
+        return self.get_auth(status)
 
     def takeoff(self):
-        self.control(4)
+        return self.control(4)
 
     def land(self):
-        self.control(6)
+        return self.control(6)
 
     def move_up(self):
         #need to go from (x,z) to (x,z+1)
@@ -280,6 +284,8 @@ class Explorer:
         msg = Joy()
         msg.axes = [0, 0, height, change] #double check these values
         self.position_control.publish(msg)
+        time.sleep(1)
+        return
 
     def set_z(self, change):
         yaw = self.StreamAttitude.yaw_y
@@ -287,6 +293,8 @@ class Explorer:
         msg = Joy()
         msg.axes = [0, change, height, yaw] #double check these values
         self.position_control.publish(msg)
+        time.sleep(1)
+        return
 
     def set_x(self, change):
         yaw = self.StreamAttitude.yaw_y
@@ -294,6 +302,16 @@ class Explorer:
         msg = Joy()
         msg.axes = [change, 0, height, yaw]
         self.position_control.publish(msg)
+        time.sleep(1)
+        return
+
+    def check_mission_accomplished(self):
+        acc = self.mission_accomplished
+        if acc:
+            print("Mission accomplished. Landing and removing authority.")
+            self.land()
+            self.set_auth(0)
+        return acc
 
 
 # Start the Exploration.
