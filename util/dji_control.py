@@ -1,53 +1,55 @@
+#!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Joy
-from dji_sdk.msg import SDKControlAuthority, DroneTaskControl
+from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
 import math
 
 #might need fixing ^^
 
 
 def main():
+    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
     rospy.init_node('control_planner')
-    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
 
-    get_auth = rospy.ServiceProxy("dji_sdk/sdk_control_authority", SDKControlAuthority)
+    get_auth = rospy.ServiceProxy("/dji_sdk/sdk_control_authority", SDKControlAuthority)
     control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
 
-    set_auth(1)
+    get_auth(1)
 
     r = rospy.Rate(10)
     msg = Joy()
     while not rospy.is_shutdown():
-        input = raw_input("Enter control command")
+        input = raw_input("Enter control command: ")
+        print(input)
         #wasd = move forward/back/left/right
         #i/k = up/down
         #j/l =rotate left/right
         #t/g = takeoff/land
         if (input == "1"):
             msg.axes = [10, 0, 10, 0]
-            print("w: move forward 10 in x, at height 10. only publish once"
+            print("w: move forward 10 in x, at height 10. only publish once")
 
-        if (input == "2"):
+        elif (input == "2"):
             msg.axes = [2, 0, 10, 0]
             print("w: move forward by 2 in x, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
-        if (input == "3"):
+        elif (input == "3"):
             msg.axes = [10, 0, 10, 0]
             print("w: move forward 10 in x, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
 
-        if (input == "4"):
+        elif (input == "4"):
             msg.axes = [10, -10, 10, math.pi]
             print("w: move forward in x, backward in y, yaw of pi, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
 
-        if (input == "w"):
+        elif (input == "w"):
             msg.axes = [2, 0, 10, 0]
             print("w: move forward in x")
         elif (input == "s"):
@@ -73,10 +75,12 @@ def main():
             print("k: decrease height")
         elif (input == "t"):
             print("takeoff")
-            takeoff()
+            control(4)
+            #takeoff()
         elif (input == "g"):
             print("landing")
-            land()
+            control(6)
+            #land()
         else:
             msg.axes = [0, 0, 0, 0]
             print("incorrect input: sending stop command")
@@ -86,14 +90,14 @@ def main():
         r.sleep()
 
 
-def set_auth(status):
-    get_auth(status)
+#def set_auth(status):
+#    get_auth(status)
 
-def takeoff():
-    control(4)
+#def takeoff():
+#    control(4)
 
-def land():
-    control(6)
+#def land():
+#    control(6)
     #format if it were a publisher:
     #task = DroneTaskControl()
     #task.task = 6
