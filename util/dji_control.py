@@ -20,7 +20,7 @@ def main():
         print("got authority")
     else:
         print("failed to get authority")
-        
+
     #takeoff
     control(4)
 
@@ -36,20 +36,23 @@ def main():
         if (input == "1"):
             msg.axes = [1, 0, 1, 0]
             print("w: move forward 10 in x, at height 10. only publish once")
-
         elif (input == "2"):
             msg.axes = [0.3, 0, 1, 0]
             print("move forward by 2 in x, at height 10. publish 30 times")
             for i in range(5):
                 pub.publish(msg)
-                r.sleep()
+                #r.sleep()
         elif (input == "3"):
             msg.axes = [0.3, 0, 1, 0]
             print("move forward in x, at height 10. publish 30 times")
             for i in range(10):
                 pub.publish(msg)
+<<<<<<< HEAD
                 r.sleep()
                 time.sleep(1)
+=======
+                time.sleep(0.1)
+>>>>>>> 2082df92fdef1b80252732089062c36991a5cac0
 
         elif (input == "4"):
             msg.axes = [10, -10, 1, np.pi]

@@ -8,9 +8,10 @@ from stream_camera import StreamCamera
 from depth_map import DepthMap
 from grid import Grid
 
-import math
 from sensor_msgs.msg import Joy
-from dji_sdk.msg import SDKControlAuthority
+from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
+
+import time
 
 #from robotics_final_project.segmentation import Segmentation
 #from robotics_final_project.path_planner import PathPlanner
@@ -70,7 +71,7 @@ class Explorer:
 
         # setup publishers and services
         self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
-        self.get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
+        self.get_auth = rospy.ServiceProxy("/dji_sdk/sdk_control_authority", SDKControlAuthority)
         self.control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
 
 
@@ -87,23 +88,28 @@ class Explorer:
         self.update_map(True)
         print("[INFO]: World Model OK")
 
-        self.set_auth(1)
+        if (self.set_auth(1)):
+            print("got SDK authority")
+        else:
+            print("failed to obtain authority")
+
         self.explore()
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
     def update_map(self, verbose=False):
-        try:
-            self.DepthMap.update(
-                             self.StreamDisparity.image,
+        disparity = np.zeros((240, 240))
+        self.DepthMap.update(
+                             disparity,
+                             #self.StreamDisparity.image,
                              self.StreamAttitude.pitch_x,
                              self.StreamAttitude.roll_z,
                              self.disparity_focal_length,
                              verbose
                              )
 
-            self.Grid.update(
+        self.Grid.update(
                          self.DepthMap.depth_map,
                          self.disparity_FOV,
                          self.StreamAttitude.yaw_y,
@@ -111,10 +117,6 @@ class Explorer:
                          self.StreamPosition.z,
                          verbose
                          )
-            #self.update_map(True)
-        except KeyboardInterrupt:
-            print("Shutting down...")
-            exit
 
 
     # TODO, TODO: thread 1, SEMANTIC SEGMENTATION CODE
@@ -125,23 +127,197 @@ class Explorer:
     # TODO: /dji_sdk/drone_task_control 6
 
     def explore(self):
+        print("beginning search")
         max_x = self.Grid.grid.shape[1] #2*radius
         max_z = self.Grid.grid.shape[0] #2*radius
-        threshold = 0.3
+        #threshold = 0.3
+        threshold = -0.1
         self.traversed = np.zeros((max_x, max_z))
-        position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
-        get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        if (self.takeoff()):
+            print("Taking off")
+        else:
+            print("Failed to take off")
 
+        def is_open(x, z):
+            if x < 0 or z < 0 or x > max_x or z > max_z:
+                return False
+            if self.traversed[x, z] > 0:
+                return False
+            occupied = self.Grid.grid[x, z]
+            if occupied == 0:
+                #rotate and update map
+                curr_x = self.StreamPosition.x
+                curr_z = self.StreamPosition.z
+                #TODO: calculate angle between curr and deisred
+                #TODO: rotate so we face desired
+                #TODO #self.update_map() uncomment this after implementing previous 2 comments
+                occupied = self.Grid.grid[x, z]
+            return  occupied > threshold #returns false if occupied = 0 for safety reasons
 
+        def flood_fill(x,z):
+            try:
+                if self.check_mission_accomplished():
+                    return
+                self.update_map()
+                if is_open(x, z+1):
+                    self.move_up()
+                    flood_fill(x,z+1)
+                    if self.check_mission_accomplished():
+                        return
+                    self.move_down()
+                #need to come back to where we started from, because we can't jump around the map
+                if is_open(x, z-1):
+                    self.move_down()
+                    flood_fill(x,z-1)
+                    if self.check_mission_accomplished():
+                        return
+                    self.move_up()
+                if is_open(x+1, z):
+                    self.move_right()
+                    flood_fill(x+1,z)
+                    if self.check_mission_accomplished():
+                        return
+                    self.move_left()
+                if is_open(x-1, z):
+                    self.move_left()
+                    flood_fill(x-1, z)
+                    if self.check_mission_accomplished():
+                        return
+                    self.move_right()
+                return
+            except KeyboardInterrupt:
+                print("Exiting...")
+
+        flood_fill(x, z)
 
     def set_auth(self, status):
-        self.get_auth(status)
+        return self.get_auth(status)
 
     def takeoff(self):
-        self.control(4)
+        return self.control(4)
 
     def land(self):
-        self.control(6)
+        return self.control(6)
+
+    def move_up(self):
+        #need to go from (x,z) to (x,z+1)
+        print("moving forward")
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        desired_x = x
+        desired_z = z + 1
+
+        #first, rotate so we are facing up(forwards)
+        self.rotate(np.pi)
+
+        #go from (x,z) to (x, z+1)
+        while(abs(desired_z - z) > 0.2):
+            set_z(desired_z - z)
+            z = self.StreamPosition.z
+        self.set_z(0)
+
+        #update traversal matrix
+        self.traversed[desired_x, desired_z] = 1
+
+        #update occupancy grid
+        self.update_map()
+
+    def move_left(self):
+        #need to go from (x,z) to (x-1, z)
+        print("moving left")
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        desired_x = x - 1
+        desired_z = z
+
+        self.rotate((3/2)*np.pi)
+        #TODO: move
+        while(abs(desired_x - x) > 0.2):
+            set_x(desired_x - x)
+            x = self.StreamPosition.x
+        self.set_x(0)
+
+        self.traversed[desired_x, desired_z] = 1
+        self.update_map()
+
+    def move_right(self):
+        print("moving right")
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        desired_x = x + 1
+        desired_z = z
+        #rotate
+        self.rotate((1/2)*np.pi)
+        #move
+        while(abs(desired_x - x) > 0.2):
+            self.set_x(desired_x - x)
+            x = self.StreamPosition.x
+        self.set_x(0)
+        self.traversed[desired_x, desired_z] = 1
+        self.update_map()
+
+    def move_down(self):
+        print("moving backwards")
+        x = self.StreamPosition.x
+        z = self.StreamPosition.z
+        desired_x = x
+        desired_z = z - 1
+        #rotate
+        self.rotate(0)
+        #move
+        while(abs(desired_z - z) > 0.2):
+            self.set_z(desired_z - z)
+            z = self.StreamPosition.z
+        self.set_z(0)
+
+        self.traversed[desired_x, desired_z] = 1
+        self.update_map()
+
+    def set_yaw(self, change): #might need to multiply the change value
+        height = self.StreamPosition.y
+        msg = Joy()
+        msg.axes = [0, 0, height, change] #double check these values
+        self.position_control.publish(msg)
+        time.sleep(1)
+        return
+
+    def rotate(self, desired_yaw):
+        print("rotating to ", desired_yaw, "radians")
+        error = (np.pi)/16
+        yaw = self.StreamAttitude.yaw_y
+        while (yaw < desired_yaw - error or yaw > desired_yaw + error):
+            self.set_yaw(desired_yaw - yaw) #if our yaw is lower, we increase it. if its too high, we decrease it
+            yaw = self.StreamAttitude.yaw_y
+        self.set_yaw(0) #stop rotating
+        return
+
+    def set_z(self, change):
+        yaw = self.StreamAttitude.yaw_y
+        height = self.StreamPosition.y
+        msg = Joy()
+        msg.axes = [0, change, height, yaw] #double check these values
+        self.position_control.publish(msg)
+        time.sleep(1)
+        return
+
+    def set_x(self, change):
+        yaw = self.StreamAttitude.yaw_y
+        height = self.StreamPosition.y
+        msg = Joy()
+        msg.axes = [change, 0, height, yaw]
+        self.position_control.publish(msg)
+        time.sleep(1)
+        return
+
+    def check_mission_accomplished(self):
+        acc = self.mission_accomplished
+        if acc:
+            print("Mission accomplished. Landing and removing authority.")
+            self.land()
+            self.set_auth(0)
+        return acc
 
 
 # Start the Exploration.
