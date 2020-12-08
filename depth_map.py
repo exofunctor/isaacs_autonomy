@@ -12,12 +12,16 @@ class DepthMap:
         self.depth_map = None
 
     # TODO: Description.
-    def update(self, disparity, pitch, roll, f=None):
+    def update(self, disparity, pitch, roll, f=None, verbose=False):
         # TODO TODO: convert disparity to depth measure.
         # TODO TODO: use altitude measurement
         # Warp the depth map such that it is parallel to the
         # xz-plane that we are searching in.
         depth_map = self.warp3D(disparity, pitch, roll, f)
+        if verbose:
+            cv2.imshow("Depth Map", depth_map/255.)
+            cv2.waitKey(1)
+            # cv2.destroyAllWindows()
         # Reduce the depth map to a 1D array.
         depth_map = self.maxpool_columns(depth_map)
         self.depth_map = depth_map

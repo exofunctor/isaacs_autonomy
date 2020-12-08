@@ -11,7 +11,7 @@ class Grid:
 
     # TODO: description and parameters.
     # NOTE: camera_FOV and yaw must be in radians
-    def update(self, depth_map, camera_FOV, yaw, x, z):
+    def update(self, depth_map, camera_FOV, yaw, x, z, verbose=False):
 
         # TODO: use self variables instead
 
@@ -119,6 +119,11 @@ class Grid:
         # print(x1, x2, z1, z2)
         self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box
 
+        if verbose:
+            cv2.imshow("Grid", self.grid/255.)
+            cv2.waitKey(1)
+            # cv2.destroyAllWindows()
+
         # print(points)
         # cv2.fillPoly(self.grid, [points], 1, 16)
 
@@ -160,8 +165,8 @@ class Grid:
 
 
 ##
-# grid = Grid(20)
-# depth_map = 7*np.ones(9)
+grid = Grid(10)
+depth_map = 7*np.ones(9)
 # depth_map[0] = 9
 # depth_map[1] = 0
 # depth_map[2] = 0
@@ -171,9 +176,9 @@ class Grid:
 # depth_map[6] = 0
 # depth_map[7] = 0
 # depth_map[7] = 4
-# camera_FOV = np.pi/2
-# yaw = np.pi/4
-# x = 3
-# z = 3
-# out = grid.update_grid(depth_map, camera_FOV, yaw, x, z)
+camera_FOV = np.pi/3
+yaw = np.pi/4
+x = 3
+z = 3
+out = grid.update(depth_map, camera_FOV, yaw, x, z, verbose=True)
 # print(out)
