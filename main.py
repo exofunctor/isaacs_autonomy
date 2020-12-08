@@ -134,6 +134,8 @@ class Explorer:
         #max_z = int(2*self.radius)
         max_x = 6
         max_z = 6
+        print("max_x: ", max_x)
+        print("max_z: ", max_z)
         #max_x = self.Grid.grid.shape[1] #2*radius
         #max_z = self.Grid.grid.shape[0] #2*radius
         #threshold = 0.3
@@ -150,7 +152,7 @@ class Explorer:
             if x < 0 or z < 0 or x >= max_x or z >= max_z:
                 return False
             if self.traversed[int(x), int(z)] > 0:
-                print("x: ", x, "z: ", z, "is occupied")
+                print("x: ", int(x), "z: ", int(z), "is OCCUPIED/TRAVELED")
                 return False
             occupied = self.Grid.grid[x, z]
             if occupied == 0:
@@ -161,41 +163,39 @@ class Explorer:
                 #TODO: rotate so we face desired
                 #TODO #self.update_map() uncomment this after implementing previous 2 comments
                 occupied = self.Grid.grid[x, z]
-            print("x: ", x, "z: ", z, "is free")
+            print("x: ", x, "z: ", z, "is OPEN. going there next")
             return  occupied > threshold #returns false if occupied = 0 for safety reasons
 
         def flood_fill(x,z):
             try:
-                print("max_x: ", max_x)
-                print("max_z: ", max_z)
                 if self.check_mission_accomplished():
                     return
                 self.update_map()
                 if is_open(x, z+1):
-                    self.move_up()
+                    self.move_up(x, z+1)
                     flood_fill(x,z+1)
                     if self.check_mission_accomplished():
                         return
-                    self.move_down()
+                    self.move_down(x, z)
                 #need to come back to where we started from, because we can't jump around the map
                 if is_open(x, z-1):
-                    self.move_down()
+                    self.move_down(x, z-1)
                     flood_fill(x,z-1)
                     if self.check_mission_accomplished():
                         return
-                    self.move_up()
+                    self.move_up(x, z)
                 if is_open(x+1, z):
-                    self.move_right()
+                    self.move_right(x+1, z)
                     flood_fill(x+1,z)
                     if self.check_mission_accomplished():
                         return
-                    self.move_left()
+                    self.move_left(x,z)
                 if is_open(x-1, z):
-                    self.move_left()
+                    self.move_left(x-1,z)
                     flood_fill(x-1, z)
                     if self.check_mission_accomplished():
                         return
-                    self.move_right()
+                    self.move_right(x,z)
                 return
             except KeyboardInterrupt:
                 print("Exiting...")
@@ -211,88 +211,90 @@ class Explorer:
     def land(self):
         return self.control(6)
 
-    def move_up(self):
+    def move_up(self, desired_x, desired_z):
         #need to go from (x,z) to (x,z+1)
-        print("moving forward")
+        #print("moving forward")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
-        desired_x = x
-        desired_z = z + 1
+        print("moving forward, from z=", z, " to z=", desired_z)
 
         #first, rotate so we are facing up(forwards)
         self.rotate(np.pi)
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
-            print("current z: ", z)
-            print("trying to go to: ", desired_z)
+            #print("current z: ", z)
+            #print("trying to go to: ", desired_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
 
         #update traversal matrix
         self.traversed[int(desired_x), int(desired_z)] = 1
+        print("we have now visited (x,z) = (", int(desired_x), ", ", int(desired_z), ")")
 
         #update occupancy grid
         self.update_map()
 
-    def move_left(self):
+    def move_left(self, desired_x, desired_z):
         #need to go from (x,z) to (x-1, z)
-        print("moving left")
+        #print("moving left")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
-        desired_x = x - 1
-        desired_z = z
+        print("moving left, from x=", x, " to x=", desired_x)
 
         self.rotate((3/2)*np.pi)
         #TODO: move
         while(abs(x - desired_x) > 0.2):
-            print("current x: ", x)
-            print("trying to go to: ", desired_x)
-            print("Going left.")
+            #print("current x: ", x)
+            #print("trying to go to: ", desired_x)
+            #print("Going left.")
             self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
 
         self.traversed[int(desired_x), int(desired_z)] = 1
+        print("we have now visited (x,z) = (", int(desired_x), ", ", int(desired_z), ")")
+
         self.update_map()
 
-    def move_right(self):
+    def move_right(self,  desired_x, desired_z):
         print("moving right")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
-        desired_x = x + 1
-        desired_z = z
+        print("moving right, from x=", x, " to x=", desired_x)
         #rotate
         self.rotate((1/2)*np.pi)
         #move
         while(abs(x - desired_x) > 0.2):
-            print("current x: ", x)
-            print("trying to go to: ", desired_x)
-            print("Going right.")
+            #print("current x: ", x)
+            #print("trying to go to: ", desired_x)
+            #print("Going right.")
             self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
         self.traversed[int(desired_x), int(desired_z)] = 1
+        print("we have now visited (x,z) = (", int(desired_x), ", ", int(desired_z), ")")
+
         self.update_map()
 
-    def move_down(self):
-        print("moving backwards")
+    def move_down(self, desired_x, desired_z):
         x = self.StreamPosition.x
         z = self.StreamPosition.z
-        desired_x = x
-        desired_z = z - 1
+        print("moving backwards, from z=", z, " to z=", desired_z)
         #rotate
         self.rotate(0)
         #move
         while(abs(desired_z - z) > 0.2):
-            print("current z: ", z)
-            print("trying to go to: ", desired_z)
+            #print("current z: ", z)
+            #print("trying to go to: ", desired_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
 
         self.traversed[int(desired_x), int(desired_z)] = 1
+        print("we have now visited (x,z) = (", int(desired_x), ", ", int(desired_z), ")")
+
         self.update_map()
 
     def set_yaw(self, change): #might need to multiply the change value
