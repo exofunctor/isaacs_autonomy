@@ -12,7 +12,7 @@ max_z = self.Grid.grid.shape(0) #2*radius
 threshold = 0.3
 self.traversed = np.zeros((max_x, max_z)) #have we already been there?
 
-self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
+self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
 self.get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
 self.control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
 
@@ -71,7 +71,7 @@ def is_open(x,z):
         curr_z = self.StreamPosition.z
         #TODO: calculate angle between curr and deisred
         #TODO: rotate so we face desired
-        self.update_map()
+        #TODO #self.update_map() uncomment this after implementing previous 2 comments
         occupied = self.Grid.grid[x, z]
     return  occupied > threshold #returns false if occupied = 0 for safety reasons
 
@@ -84,7 +84,7 @@ def move_up():
 
     #first, rotate so we are facing up(forwards)
     rotate(math.pi)
-    
+
     #go from (x,z) to (x, z+1)
     while(abs(desired_z - z) > 0.2):
         set_z(desired_z - z)
@@ -99,21 +99,49 @@ def move_up():
 
 def move_left():
     #need to go from (x,z) to (x-1, z)
-    #TODO: rotate
+    x = self.StreamPosition.x
+    z = self.StreamPosition.z
+    desired_x = x - 1
+    desired_z = z
+
+    rotate((3/2)*math.pi)
     #TODO: move
+    while(abs(desired_x - x) > 0.2):
+        set_x(desired_x - x)
+        x = self.StreamPosition.x
+    set_x(0)
 
     self.traversed[desired_x, desired_z] = 1
     self.update_map()
 
 def move_right():
-    #TODO: rotate
-    #TODO: move
+    x = self.StreamPosition.x
+    z = self.StreamPosition.z
+    desired_x = x + 1
+    desired_z = z
+    #rotate
+    rotate((1/2)*math.pi)
+    #move
+    while(abs(desired_x - x) > 0.2):
+        set_x(desired_x - x)
+        x = self.StreamPosition.x
+    set_x(0)
     self.traversed[desired_x, desired_z] = 1
     self.update_map()
 
 def move_down():
-    #TODO: rotate
-    #TODO: move
+    x = self.StreamPosition.x
+    z = self.StreamPosition.z
+    desired_x = x
+    desired_z = z - 1
+    #rotate
+    rotate(0)
+    #move
+    while(abs(desired_z - z) > 0.2):
+        set_z(desired_z - z)
+        z = self.StreamPosition.z
+    set_z(0)
+
     self.traversed[desired_x, desired_z] = 1
     self.update_map()
 

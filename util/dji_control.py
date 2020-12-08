@@ -1,6 +1,6 @@
 import rospy
 from sensor_msgs.msg import Joy
-from dji_sdk.msg import SDKControlAuthority, DroneTaskControl
+from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
 import math
 
 #might need fixing ^^
@@ -8,7 +8,7 @@ import math
 
 def main():
     rospy.init_node('control_planner')
-    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
+    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, )
 
     get_auth = rospy.ServiceProxy("dji_sdk/sdk_control_authority", SDKControlAuthority)
     control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
@@ -25,29 +25,27 @@ def main():
         #t/g = takeoff/land
         if (input == "1"):
             msg.axes = [10, 0, 10, 0]
-            print("w: move forward 10 in x, at height 10. only publish once"
-
-        if (input == "2"):
+            print("move forward 10 in x, at height 10. only publish once")
+        elif (input == "2"):
             msg.axes = [2, 0, 10, 0]
-            print("w: move forward by 2 in x, at height 10. publish 30 times")
+            print("move forward by 2 in x, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
-        if (input == "3"):
+        elif (input == "3"):
             msg.axes = [10, 0, 10, 0]
-            print("w: move forward 10 in x, at height 10. publish 30 times")
+            print("move forward in x, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
 
-        if (input == "4"):
+        elif (input == "4"):
             msg.axes = [10, -10, 10, math.pi]
-            print("w: move forward in x, backward in y, yaw of pi, at height 10. publish 30 times")
+            print("move forward in x, backward in y, yaw of pi, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
                 r.sleep()
-
-        if (input == "w"):
+        elif (input == "w"):
             msg.axes = [2, 0, 10, 0]
             print("w: move forward in x")
         elif (input == "s"):
@@ -94,11 +92,6 @@ def takeoff():
 
 def land():
     control(6)
-    #format if it were a publisher:
-    #task = DroneTaskControl()
-    #task.task = 6
-    #control(.publish(task))
-
 
 if __name__ == '__main__':
     main()

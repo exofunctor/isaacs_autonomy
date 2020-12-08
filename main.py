@@ -69,7 +69,7 @@ class Explorer:
         rospy.init_node("isaacs_autonomy", anonymous=True)
 
         # setup publishers and services
-        self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
+        self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
         self.get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
         self.control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
 
@@ -125,8 +125,8 @@ class Explorer:
     # TODO: /dji_sdk/drone_task_control 6
 
     def explore(self):
-        max_x = self.Grid.grid.shape(1) #2*radius
-        max_z = self.Grid.grid.shape(0) #2*radius
+        max_x = self.Grid.grid.shape[1] #2*radius
+        max_z = self.Grid.grid.shape[0] #2*radius
         threshold = 0.3
         self.traversed = np.zeros((max_x, max_z))
         position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
