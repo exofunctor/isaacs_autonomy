@@ -17,7 +17,8 @@ class DepthMap:
         # TODO TODO: use altitude measurement
         # Warp the depth map such that it is parallel to the
         # xz-plane that we are searching in.
-        depth_map = self.warp3D(disparity, pitch, roll, f)
+        depth_map = disparity
+        #depth_map = self.warp3D(disparity, pitch, roll, f)
         if verbose:
             cv2.imshow("Depth Map", depth_map/255.)
             cv2.waitKey(1)
