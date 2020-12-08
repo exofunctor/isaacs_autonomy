@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import numpy as np
 import cv2
 
@@ -48,7 +49,7 @@ class Grid:
         #               /
         #              /
         #             / ) <- yaw
-        #            · ――――――――――――――――――――――――――――――――――> x-axis
+        #            . ----------------------------------> x-axis
         #            ^
         #            |
         #           x, z (robot position)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 import sys
 import numpy as np
@@ -6,8 +7,8 @@ from stream_attitude import StreamAttitude
 from stream_camera import StreamCamera
 from depth_map import DepthMap
 from grid import Grid
-from segmentation import Segmentation
-from path_planner import PathPlanner
+#from robotics_final_project.segmentation import Segmentation
+#from robotics_final_project.path_planner import PathPlanner
 # import roslib
 # roslib.load_manifest('isaacs_autonomy')
 
@@ -29,6 +30,8 @@ class Explorer:
                  disparity_FOV=np.pi/3,
                  topic_segmentation="/dji_sdk/fpv_camera_images",
                  ):
+        
+        print("[INFO]: Initializing Explorer")
 
         # When the delivery target has been found, this will turn True.
         self.mission_accomplished = False
@@ -45,21 +48,28 @@ class Explorer:
         # Start the sensor streamers. TODO TODO: synchronize at 10 hz
         # TODO: ? hz
         self.StreamPosition = StreamPosition(topic_position, UAV_diameter)
+        print("[INFO]: StreamPosition OK")
         # 100 hz
         self.StreamAttitude = StreamAttitude(topic_attitude)
+        print("[INFO]: StreamAttitude OK")
         # 10 hz
         self.StreamDisparity = StreamCamera(topic_disparity, "mono8")
+        print("[INFO]: StreamDisparity OK")
         # TODO: ? hz
         self.StreamSegmentation = StreamCamera(topic_segmentation, "bgr8")
+        print("[INFO]: StreamSegmentation OK")
 
         # Initialize a depth map.
         self.DepthMap = DepthMap()
+        print("[INFO]: DepthMap OK")
 
         # Initialize a geographical search grid.
         self.Grid = Grid(search_radius)
+        print("[INFO]: Grid OK")
 
         # Update the map with the initial measurements.
         self.update_map(verbose=True)
+        print("[INFO]: World Model OK")
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
@@ -94,7 +104,7 @@ class Explorer:
 # Start the Exploration.
 def main(args):
 
-    Explorer(**args)
+    Explorer(args[0])
     rospy.init_node("isaacs_autonomy", anonymous=True)
 
     try:
@@ -104,4 +114,5 @@ def main(args):
 
 
 if __name__ == '__main__':
+    print(sys.argv)
     main(sys.argv)
