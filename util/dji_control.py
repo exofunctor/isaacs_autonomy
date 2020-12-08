@@ -8,7 +8,7 @@ import math
 
 
 def main():
-    pub = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
+    pub = rospy.Publisher('/dji_sdk/flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
     rospy.init_node('control_planner')
 
     get_auth = rospy.ServiceProxy("/dji_sdk/sdk_control_authority", SDKControlAuthority)
@@ -19,7 +19,7 @@ def main():
         print("got authority")
     else:
         print("failed to get authority")
-        
+
     #takeoff
     control(4)
 
@@ -33,11 +33,10 @@ def main():
         #j/l =rotate left/right
         #t/g = takeoff/land
         if (input == "1"):
-            msg.axes = [10, 0, 10, 0]
+            msg.axes = [1, 0, 10, 0]
             print("w: move forward 10 in x, at height 10. only publish once")
-
         elif (input == "2"):
-            msg.axes = [2, 0, 10, 0]
+            msg.axes = [20, 0, 10, 0]
             print("move forward by 2 in x, at height 10. publish 30 times")
             for i in range(30):
                 pub.publish(msg)
