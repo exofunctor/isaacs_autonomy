@@ -229,7 +229,7 @@ class Explorer:
         self.set_z(0)
 
         #update traversal matrix
-        self.traversed[desired_x, desired_z] = 1
+        self.traversed[(int)desired_x, (int)desired_z] = 1
 
         #update occupancy grid
         self.update_map()
@@ -252,7 +252,7 @@ class Explorer:
             x = self.StreamPosition.x
         self.set_x(0)
 
-        self.traversed[desired_x, desired_z] = 1
+        self.traversed[(int)desired_x, (int)desired_z] = 1
         self.update_map()
 
     def move_right(self):
@@ -271,7 +271,7 @@ class Explorer:
             self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
-        self.traversed[desired_x, desired_z] = 1
+        self.traversed[(int)desired_x, (int)desired_z] = 1
         self.update_map()
 
     def move_down(self):
@@ -290,7 +290,7 @@ class Explorer:
             z = self.StreamPosition.z
         self.set_z(0)
 
-        self.traversed[desired_x, desired_z] = 1
+        self.traversed[(int)desired_x, (int)desired_z] = 1
         self.update_map()
 
     def set_yaw(self, change): #might need to multiply the change value
