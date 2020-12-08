@@ -50,6 +50,7 @@ class Explorer:
         self.disparity_focal_length = disparity_focal_length
         self.disparity_FOV = disparity_FOV
         self.topic_segmentation = topic_segmentation
+        self.height = 1.2
 
         # Start the sensor streamers. TODO TODO: synchronize at 10 hz
         # TODO: ? hz
@@ -214,6 +215,8 @@ class Explorer:
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
+            print("current z: ", z)
+            print("trying to go to: ", desired_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
@@ -235,6 +238,8 @@ class Explorer:
         self.rotate((3/2)*np.pi)
         #TODO: move
         while(abs(desired_x - x) > 0.2):
+            print("current x: ", x)
+            print("trying to go to: ", desired_x)
             self.set_x(desired_x - x)
             x = self.StreamPosition.x
         self.set_x(0)
@@ -252,6 +257,8 @@ class Explorer:
         self.rotate((1/2)*np.pi)
         #move
         while(abs(desired_x - x) > 0.2):
+            print("current x: ", x)
+            print("trying to go to: ", desired_x)
             self.set_x(desired_x - x)
             x = self.StreamPosition.x
         self.set_x(0)
@@ -268,6 +275,8 @@ class Explorer:
         self.rotate(0)
         #move
         while(abs(desired_z - z) > 0.2):
+            print("current z: ", z)
+            print("trying to go to: ", desired_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
@@ -276,9 +285,8 @@ class Explorer:
         self.update_map()
 
     def set_yaw(self, change): #might need to multiply the change value
-        height = self.StreamPosition.y
         msg = Joy()
-        msg.axes = [0, 0, height, change] #double check these values
+        msg.axes = [0, 0, self.height, change] #double check these values
         self.position_control.publish(msg)
         time.sleep(1)
         return
@@ -298,18 +306,16 @@ class Explorer:
 
     def set_z(self, change):
         yaw = self.StreamAttitude.yaw_y
-        height = self.StreamPosition.y
         msg = Joy()
-        msg.axes = [0, change, height, yaw] #double check these values
+        msg.axes = [0, change, self.height, 0] #double check these values
         self.position_control.publish(msg)
         time.sleep(1)
         return
 
     def set_x(self, change):
         yaw = self.StreamAttitude.yaw_y
-        height = self.StreamPosition.y
         msg = Joy()
-        msg.axes = [change, 0, height, yaw]
+        msg.axes = [change, 0, self.height, 0]
         self.position_control.publish(msg)
         time.sleep(1)
         return
