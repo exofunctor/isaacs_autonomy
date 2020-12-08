@@ -8,6 +8,11 @@ from depth_map import DepthMap
 from grid import Grid
 from segmentation import Segmentation
 from path_planner import PathPlanner
+
+import math
+from sensor_msgs.msg import Joy
+from dji_sdk.msg import SDKControlAuthority
+
 # import roslib
 # roslib.load_manifest('isaacs_autonomy')
 
@@ -48,14 +53,24 @@ class Explorer:
         self.StreamDisparity = StreamCamera(topic_disparity, "mono8")
         self.StreamSegmentation = StreamCamera(topic_segmentation, "bgr8")
 
+        # setup publishers and services
+        self.position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
+        self.get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
+        self.control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
+
+
         # Initialize a depth map.
         self.DepthMap = DepthMap()
 
         # Initialize a geographical search grid.
         self.Grid = Grid(search_radius)
 
+
         # Update the map with the initial measurements.
         self.update_map()
+
+        self.set_auth(1)
+        self.explore()
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
@@ -83,6 +98,25 @@ class Explorer:
     # The mission has been accomplished. Time to land!
     # print("Mission accomplished!")
     # TODO: /dji_sdk/drone_task_control 6
+
+    def explore(self):
+        max_x = self.Grid.grid.shape(1) #2*radius
+        max_z = self.Grid.grid.shape(0) #2*radius
+        threshold = 0.3
+        self.traversed = np.zeros((max_x, max_z))
+        position_control = rospy.Publisher('flight_control_setpoint_ENUposition_yaw', Joy)
+        get_auth = rospy.Publisher("dji_sdk/sdk_control_authority", SDKControlAuthority)
+
+
+
+    def set_auth(self, status):
+        self.get_auth(status)
+
+    def takeoff(self):
+        self.control(4)
+
+    def land(self):
+        self.control(6)
 
 
 # Start the Exploration.
