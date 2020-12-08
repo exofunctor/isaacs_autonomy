@@ -343,6 +343,16 @@ class Explorer:
         return acc
 
 
+def handle_search(req):
+    dummy = 0
+    args= [dummy, req.radius]
+    main(args)
+    return True
+
+
+def alternate_main():
+    serv = rospy.Service("start_search", Search, handle_search)
+
 # Start the Exploration.
 def main(args):
     #print(args)
@@ -359,12 +369,3 @@ def main(args):
 if __name__ == '__main__':
     #main(sys.argv)
     alternate_main()
-
-def alternate_main():
-    serv = rospy.Service("start_search", Search, handle_search)
-
-def handle_search(req):
-    dummy = 0
-    args=[dummy, req.radius]
-    main(args)
-    return True
