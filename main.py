@@ -288,7 +288,7 @@ class Explorer:
         error = (np.pi)/16
         yaw = self.StreamAttitude.yaw_y
         while (yaw < desired_yaw - error or yaw > desired_yaw + error):
-            self.set_yaw(desired_yaw - yaw) #if our yaw is lower, we increase it. if its too high, we decrease it
+            self.set_yaw(desired_yaw) #if our yaw is lower, we increase it. if its too high, we decrease it
             yaw = self.StreamAttitude.yaw_y
         self.set_yaw(0) #stop rotating
         return
