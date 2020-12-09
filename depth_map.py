@@ -17,12 +17,25 @@ class DepthMap:
         # TODO TODO: use altitude measurement
         # Warp the depth map such that it is parallel to the
         # xz-plane that we are searching in.
-        depth_map = disparity
-        #depth_map = self.warp3D(disparity, pitch, roll, f)
+        # depth_map = disparity
+
+        disparity /= 255.
+        depth_map = self.warp3D(disparity, pitch, roll, f)
+
         if verbose:
-            cv2.imshow("Depth Map", depth_map/255.)
-            cv2.waitKey(1)
-            # cv2.destroyAllWindows()
+            disparity_gauss1 = cv2.GaussianBlur(disparity, 25, 10)
+            disparity_gauss2 = cv2.GaussianBlur(disparity, 5, 30)
+            depth_map1 = self.warp3D(disparity_gauss1, pitch, roll, f)
+            depth_map2 = self.warp3D(disparity_gauss2, pitch, roll, f)
+
+            top = np.hstack([disparity, disparity_gauss1, disparity_gauss2])
+            bottom = np.hstack([depth_map, depth_map1, depth_map2])
+            out = np.vstack([top, bottom])
+
+            # cv2.imshow("Depth Map", depth_map)
+            cv2.imshow("Depth Perception", out)
+            cv2.waitKey(3)
+
         # Reduce the depth map to a 1D array.
         depth_map = self.maxpool_columns(depth_map)
         self.depth_map = depth_map
@@ -100,6 +113,7 @@ class DepthMap:
     # Return the highest value of each colun of the given image.
     # If `im` is a 2D depth map, this reduces it down to a 1D array of depths.
     def maxpool_columns(self, im):
+        # TODO: select only part of the image.
         return np.max(im, axis=0)
 
 
