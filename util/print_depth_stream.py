@@ -26,7 +26,7 @@ class DepthVisualizer:
 
         disparity_gauss = cv2.GaussianBlur(disparity/255., (5, 5), 10)
         disparity_med = cv2.medianBlur(disparity, 5)/255.
-        disparity /= 255.
+        disparity = disparity/255.
 
         depth_map = self.DepthMap.warp3D(disparity,
                                          self.StreamAttitude.pitch_x,
