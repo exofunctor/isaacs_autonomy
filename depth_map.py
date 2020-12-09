@@ -23,8 +23,8 @@ class DepthMap:
         depth_map = self.warp3D(disparity, pitch, roll, f)
 
         if verbose:
-            disparity_gauss1 = cv2.GaussianBlur(disparity, 25, 10)
-            disparity_gauss2 = cv2.GaussianBlur(disparity, 5, 30)
+            disparity_gauss1 = cv2.GaussianBlur(disparity, (25, 25), 10)
+            disparity_gauss2 = cv2.GaussianBlur(disparity, (5, 5), 30)
             depth_map1 = self.warp3D(disparity_gauss1, pitch, roll, f)
             depth_map2 = self.warp3D(disparity_gauss2, pitch, roll, f)
 
