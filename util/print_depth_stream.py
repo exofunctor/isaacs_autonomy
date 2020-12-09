@@ -24,8 +24,8 @@ class DepthVisualizer:
         except CvBridgeError as error:
             print(error)
 
-        disparity_gauss1 = cv2.GaussianBlur(disparity, 25, 10)
-        disparity_gauss2 = cv2.GaussianBlur(disparity, 5, 30)
+        disparity_gauss1 = cv2.GaussianBlur(disparity, (25, 25), 10)
+        disparity_gauss2 = cv2.GaussianBlur(disparity, (5, 5), 30)
 
         depth_map = self.DepthMap.warp3D(disparity,
                                          self.StreamAttitude.pitch_x,
