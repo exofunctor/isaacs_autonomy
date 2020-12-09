@@ -7,13 +7,12 @@ class Grid:
 
     def __init__(self, radius):
         self.radius = radius
-        radius = int(2 * radius) / 100
-        self.grid = np.zeros((radius, radius), dtype=np.uint8)
+        radius = int(2 * radius)# / 100
+        self.grid = np.zeros((radius, radius), dtype=np.int16)
 
     # TODO: description and parameters.
     # NOTE: camera_FOV and yaw must be in radians
     def update(self, depth_map, camera_FOV, yaw, x, z, verbose=False):
-        print("~~~~~~~~~~~~~~~: " + str(self.grid.shape))
 
         # TODO: use self variables instead
 
@@ -90,7 +89,6 @@ class Grid:
         max_depth = int(np.max(depth_map) + 1)
         box_len = 2*max_depth + 1
         box = np.zeros((box_len, box_len)).astype(self.grid.dtype)
-        print(box.shape)
 
         o_points = np.stack([o_x, o_z]).T
         o_points = o_points - np.array([x-max_depth, z-max_depth])
@@ -105,44 +103,34 @@ class Grid:
         # print(points)
         # NOTE: 16 represents int16
 
-        # print(box)
         # Edge case: on an edge.
         x1 = x - max_depth
         if x1 < 0:
-            print("x1 exception")
+            # print("x1 exception")
             box = box[:, -x1:]
             x1 = 0
         x2 = x + max_depth + 1
         z1 = z - max_depth
         if z1 < 0:
-            print("z1 exception")
+            # print("z1 exception")
             box = box[-z1:, :]
-            print(box.shape)
             z1 = 0
         z2 = z + max_depth + 1
-        # self.grid[] = self.grid[] + box
-        # print(self.grid[0:5, x1:x2])
-        # print(x1, x2, z1, z2)
-        print(z1, z2, x1, x2)
-        print(self.grid.shape)
-        print(box.shape)
-        self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box.astype(np.uint8)
+        self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box
 
         if verbose:
-            #cv2.destroyAllWindows()
-            print(self.grid)
-            print(self.grid.shape)
+            # print(self.grid)
+            B = np.zeros(self.grid.shape)
+            G = (self.grid > 0) * self.grid
+            R = (self.grid < 0) * self.grid * -1
+
+            BGR_grid = np.dstack([B, G, R])
+
             cv2.namedWindow("Grid", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("Grid", 600,600)
-            cv2.imshow("Grid", 3*self.grid)
-            #cv2.waitKey(1) & 0xFF == ord('q')
-            #    break
+            cv2.resizeWindow("Grid", 600, 600)
+            cv2.imshow("Grid", 30*BGR_grid)
 
             cv2.waitKey(3)
-            #plt.close()
-            #plt.imshow(self.grid, cmap='gray')
-            #plt.show()
-            #cv2.destroyAllWindows()
 
         # print(points)
         # cv2.fillPoly(self.grid, [points], 1, 16)
@@ -185,8 +173,8 @@ class Grid:
 
 
 ##
-#grid = Grid(10)
-#depth_map = 7*np.ones(9)
+grid = Grid(10)
+depth_map = 7*np.ones(9)
 # depth_map[0] = 9
 # depth_map[1] = 0
 # depth_map[2] = 0
@@ -196,9 +184,15 @@ class Grid:
 # depth_map[6] = 0
 # depth_map[7] = 0
 # depth_map[7] = 4
-#camera_FOV = np.pi/3
-#yaw = np.pi/4
-#x = 3
-#z = 3
-#out = grid.update(depth_map, camera_FOV, yaw, x, z, verbose=True)
-# print(out)
+camera_FOV = np.pi/3
+yaw = np.pi/4
+x = 3
+z = 3
+out = grid.update(depth_map, camera_FOV, yaw, x, z, verbose=True)
+
+B = np.zeros(out.shape)
+G = (out > 0) * out
+R = (out < 0) * out * -1
+BGR_grid = np.dstack([R, B, G])
+
+print(out)
