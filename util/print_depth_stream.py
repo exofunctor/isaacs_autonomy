@@ -24,8 +24,9 @@ class DepthVisualizer:
         except CvBridgeError as error:
             print(error)
 
-        disparity_gauss = cv2.GaussianBlur(disparity/255., (25, 25), 10)
-        disparity_med = cv2.medianBlur(disparity, (25, 25))/255.
+        disparity_gauss = cv2.GaussianBlur(disparity/255., (5, 5), 10)
+        disparity_med = cv2.medianBlur(disparity, 5)/255.
+        disparity /= 255.
 
         depth_map = self.DepthMap.warp3D(disparity,
                                          self.StreamAttitude.pitch_x,
@@ -42,8 +43,8 @@ class DepthVisualizer:
                                           self.StreamAttitude.roll_z,
                                           None)
 
-        top = np.hstack([disparity, disparity_gauss, disparity_med])
-        bottom = np.hstack([depth_map, depth_map1, depth_map2])
+        top = np.hstack([depth_map, depth_map1, depth_map2])
+        bottom = np.hstack([disparity, disparity_gauss, disparity_med])
         out = np.vstack([top, bottom])
 
         cv2.imshow("Disparity", out)
