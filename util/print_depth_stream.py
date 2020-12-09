@@ -29,18 +29,18 @@ class DepthVisualizer:
         disparity = disparity/255.
 
         depth_map = self.DepthMap.warp3D(disparity,
-                                         self.StreamAttitude.pitch_x,
-                                         self.StreamAttitude.roll_z,
+                                         -self.StreamAttitude.pitch_x,
+                                         -self.StreamAttitude.roll_z,
                                          None)
 
         depth_map1 = self.DepthMap.warp3D(disparity_gauss,
-                                          self.StreamAttitude.pitch_x,
-                                          self.StreamAttitude.roll_z,
+                                          -self.StreamAttitude.pitch_x,
+                                          -self.StreamAttitude.roll_z,
                                           None)
 
         depth_map2 = self.DepthMap.warp3D(disparity_med,
-                                          self.StreamAttitude.pitch_x,
-                                          self.StreamAttitude.roll_z,
+                                          -self.StreamAttitude.pitch_x,
+                                          -self.StreamAttitude.roll_z,
                                           None)
 
         top = np.hstack([depth_map, depth_map1, depth_map2])
