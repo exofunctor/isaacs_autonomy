@@ -5,7 +5,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 import cv2
 from stream_attitude import StreamAttitude
-
+from depth_map import DepthMap
 
 # This class receives a ROS image type and converts it
 # to a NumPy and OpenCV compatible format.
@@ -16,6 +16,7 @@ class DepthVisualizer:
         topic = "/dji_sdk/stereo_240p_front_depth_images"
         self.image_sub = rospy.Subscriber(topic, Image, self.callback)
         self.StreamAttitude = StreamAttitude("/dji_sdk/attitude")
+        self.DepthMap = DepthMap()
 
     def callback(self, data):
         try:
@@ -26,20 +27,20 @@ class DepthVisualizer:
         disparity_gauss1 = cv2.GaussianBlur(disparity, 25, 10)
         disparity_gauss2 = cv2.GaussianBlur(disparity, 5, 30)
 
-        depth_map = self.warp3D(disparity,
-                                self.StreamAttitude.pitch_x,
-                                self.StreamAttitude.roll_z,
-                                None)
+        depth_map = self.DepthMap.warp3D(disparity,
+                                         self.StreamAttitude.pitch_x,
+                                         self.StreamAttitude.roll_z,
+                                         None)
 
-        depth_map1 = self.warp3D(disparity_gauss1,
-                                 self.StreamAttitude.pitch_x,
-                                 self.StreamAttitude.roll_z,
-                                 None)
+        depth_map1 = self.DepthMap.warp3D(disparity_gauss1,
+                                          self.StreamAttitude.pitch_x,
+                                          self.StreamAttitude.roll_z,
+                                          None)
 
-        depth_map2 = self.warp3D(disparity_gauss2,
-                                 self.StreamAttitude.pitch_x,
-                                 self.StreamAttitude.roll_z,
-                                 None)
+        depth_map2 = self.DepthMap.warp3D(disparity_gauss2,
+                                          self.StreamAttitude.pitch_x,
+                                          self.StreamAttitude.roll_z,
+                                          None)
 
         top = np.hstack([disparity, disparity_gauss1, disparity_gauss2])
         bottom = np.hstack([depth_map, depth_map1, depth_map2])
