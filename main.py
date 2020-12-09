@@ -10,7 +10,7 @@ from grid import Grid
 
 from sensor_msgs.msg import Joy
 from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
-from isaacs_autonomy.srv import Search
+#from isaacs_autonomy.srv import Search
 
 import time
 
@@ -96,15 +96,15 @@ class Explorer:
         else:
             print("failed to obtain authority")
 
-        self.explore()
+        #self.explore()
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
     def update_map(self, verbose=True):
-        disparity = 5*np.ones((240, 240))
-        self.DepthMap.update(disparity,
-                             #self.StreamDisparity.image,
+        #disparity = 5*np.ones((240, 240))
+        self.DepthMap.update(#disparity,
+                             self.StreamDisparity.image,
                              self.StreamAttitude.pitch_x,
                              self.StreamAttitude.roll_z,
                              self.disparity_focal_length,
@@ -117,6 +117,9 @@ class Explorer:
                          self.StreamPosition.x,
                          self.StreamPosition.z,
                          True)
+
+        #time.sleep(1)       
+        self.update_map()
 
     # The mission has been accomplished. Time to land!
     # print("Mission accomplished!")
@@ -343,8 +346,8 @@ def handle_search(req):
     return True
 
 
-def alternate_main():
-    serv = rospy.Service("start_search", Search, handle_search)
+#def alternate_main():
+#    serv = rospy.Service("start_search", Search, handle_search)
 
 # Start the Exploration.
 def main(args):
@@ -360,5 +363,5 @@ def main(args):
         print("Shutting down...")
 
 if __name__ == '__main__':
-    #main(sys.argv)
-    alternate_main()
+    main(sys.argv)
+    #alternate_main()
