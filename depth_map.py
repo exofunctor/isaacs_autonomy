@@ -19,8 +19,10 @@ class DepthMap:
         # xz-plane that we are searching in.
         # depth_map = disparity
 
-        disparity /= 255.
+        disparity = disparity/255.
         depth_map = self.warp3D(disparity, pitch, roll, f)
+        cv2.imshow("Depth Map", depth_map)
+        cv2.waitKey(3)
 
         if verbose:
             disparity_gauss1 = cv2.GaussianBlur(disparity, (25, 25), 10)
