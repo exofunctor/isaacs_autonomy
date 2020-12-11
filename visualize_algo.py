@@ -3,14 +3,6 @@ import numpy as np
 import cv2
 import time
 
-'''
-matrix = np.random.random((10,10))
-plt.imshow(matrix)
-
-plt.show()'''
-
-# draw the figure so the animations will work
-
 x = 0
 z = 0
 done = False
