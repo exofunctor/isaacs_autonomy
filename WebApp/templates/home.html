@@ -4,30 +4,30 @@
     <meta charset="utf-8">
     <title>106A Project</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-   
+
      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-     
+
      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-     
+
      <script src="js/modernizr-2.6.2.min.js"></script>
-     
+
      <link rel="stylesheet" href="{{ url_for('static',     filename='css/template.css') }}">
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   </head>
   <body>
     {% extends "template.html" %}
     {% block content %}
-    
+
     <br>
     <br>
     <br>
 
     <div class="container" >
 
-      <h1 class="display-4"> EECS 106A Group Project </h1>      
+      <h1 class="display-4"> EECS 106A Group Project </h1>
       <br>
       <blockquote class="blockquote text-center">
         <p class="mb-0"> "A cool quote about drones and robotics"
@@ -38,18 +38,18 @@
       <h1 class="display-4"> Project Aim </h1>
       <p class="lead">
         <br>
-        
+
         <u>
         Describe the end goal of your project.
         </u>
-        
+
         <br>
         The goal of our project is to build an end-to-end prototype for semi-autonomous quadrotor delivery. We envision having a simple app allowing users to place an order with their coordinates for delivery. This request will then appear in the operator’s VR environment enabling them to create a waypoint path for the quadrotor to approach the delivery destination. The final waypoint is placed such that it leads the quadrotor close enough to the delivery destination, yet far enough from the densely populated area. It is up to the robot, then, to autonomously and safely navigate the area, using its sensors and intelligence. Its goal is to locate a QR code that has been placed by the user to mark the exact delivery location and deliver the package. Furthermore, an internal goal for our team is to deploy this application on the ISAACS server.
         <br>
         <br>
 
-        <u> 
-        Why is this an interesting project? What interesting problems do you need to solve to make your solution work? 
+        <u>
+        Why is this an interesting project? What interesting problems do you need to solve to make your solution work?
         </u>
 
         <br>
@@ -80,13 +80,13 @@
         <u>
         (a) What design criteria must your project meet? What is the desired functionality?
         </u>
-  
+
         <br>
         The following key features (in order) comprise the design criteria our project must meet to be a successful MVP for a semi-autonomous delivery system:
         <br>
         A customer places an order with their world coordinates.
         <br>
-        An operator in VR creates a waypoint mission for the quadrotor to the user area. 
+        An operator in VR creates a waypoint mission for the quadrotor to the user area.
         <br>
         The operator in VR creates a search area and uploads the mission to the quadrotor
         <br>
@@ -101,9 +101,9 @@
         <u>
         (b) Describe the design you chose.
         </u>
-  
+
         <br>
-        Due to the various technologies and components involved in our system, we choose a modular system architecture to streamline unit testing, ease of integration and future scalability. 
+        Due to the various technologies and components involved in our system, we choose a modular system architecture to streamline unit testing, ease of integration and future scalability.
         <br>
         <br>
 
@@ -112,31 +112,31 @@
         The Web application is built using Flask and deployed on Heroku. This was done to create a functional live application with minimal effort to focus on the more challenging aspects of the project. It supports a simple form to input a user’s order and sends this to the virtual reality application.
         <br>
         <br>
- 
+
         VR:
         <br>
-        The virtual reality application is built on Unity and is an extension of the ISAACS research project. This approach was chosen as the ISAACS project provides the basic functionality required for the VR application to interface with the Matrice 210 drone. For this project, we had to create the HTTP endpoints for the web application to send the user information to the virtual reality application. We then had to extend the ISAACS architecture to support the autonomous search functionality that can be controlled by the user. This encapsulated creating the UI features, ROS service calls to the drone for waypoint missions and our custom node for search missions, and unit testing for all new features. 
+        The virtual reality application is built on Unity and is an extension of the ISAACS research project. This approach was chosen as the ISAACS project provides the basic functionality required for the VR application to interface with the Matrice 210 drone. For this project, we had to create the HTTP endpoints for the web application to send the user information to the virtual reality application. We then had to extend the ISAACS architecture to support the autonomous search functionality that can be controlled by the user. This encapsulated creating the UI features, ROS service calls to the drone for waypoint missions and our custom node for search missions, and unit testing for all new features.
         <br>
         <br>
-    
+
         Drone hardware:
         <br>
         We are using the DJI Matrice 210 as our physical drone. It has the Manifold 2-C as its onboard computer running the DJI Onboard SDK, as well our ROS node isaacs_autonomy. The drone has an RTK GPS, which communicates with an on-ground RTK base station. It also has stereoscopic cameras that we are using to create a depth map.
         <br>
         <br>
-    
+
         Image processing:
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         <br>
-    
+
         2D occupancy grid:
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         <br>
-    
+
         Exploration algorithm + control:
         <br>
         The explore algorithm is an extension of the “flood fill” algorithm. It uses a 2D occupancy grid to determine its next move. It is a recursive algorithm that performs a depth first search.
@@ -148,7 +148,7 @@
         <u>
         (c) What design choices did you make when you formulated your design? What trade-offs did you have to make?
         </u>
-  
+
         <br>
         Web App:
         <br>
@@ -164,21 +164,21 @@
 
         Drone:
         <br>
-        In our lab, we had access to the DJI Matrice 210, Matrice 600, and Phantom drones. 
+        In our lab, we had access to the DJI Matrice 210, Matrice 600, and Phantom drones.
         The M210 and M600 have an easy to use Onboard SDK that lets us use ROS to control the drones, and publishes various drone state information (battery life, GPS position, camera stream). This eliminated the Phantom as a choice. The M210 and M600 also both have RTK GPS, which lets us easily localize the drone.
-        The M210 has on-board stereo cameras, which was the main reason we chose to use it over the M600. Additionally, the M600 is much bigger, and more expensive, so we didn’t want to risk using it. Since the M210 is smaller, it can reach more places and fit in tighter spots than the M600. 
+        The M210 has on-board stereo cameras, which was the main reason we chose to use it over the M600. Additionally, the M600 is much bigger, and more expensive, so we didn’t want to risk using it. Since the M210 is smaller, it can reach more places and fit in tighter spots than the M600.
         <br>
         <br>
 
         Image Processing
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         <br>
 
         2D Occupancy Grid Node
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         3D
         More space
@@ -187,7 +187,7 @@
         And at the end of the day, it's not much more effective
         Only benefit is maneuvering around complex shaped obstacles
         Not viable in the time period
-        Have access to drone’s position and attitude, so easy to fill in the grid        
+        Have access to drone’s position and attitude, so easy to fill in the grid
         <br>
         The main reason for choosing the flood fill algorithm was that it searches every single open space, while avoiding all obstacles. It also lets us constantly update the occupancy grid as we fly. The drone control it uses (moving forward/backward/left/right one cell at a time) also integrated well with the DJI SDK’s control API. In addition, and very importantly, the flood fill algorithm is very robust, reliable, and easily visualized. We could have tried using a machine learning model, but those aren’t as robust, and we can’t know for sure why the drone chose its next move. With the flood fill, we know how it chooses the next move, and can predict what it’ll do next. With an expensive physical drone, this is highly valuable as we can’t risk any unpredictable behavior that can cause a crash.
         <br>
@@ -211,7 +211,7 @@
         <u>
         (a) Describe any hardware you used or built. Illustrate with pictures and diagrams.
         </u>
-  
+
         <br>
         Drone:
         <br>
@@ -221,7 +221,7 @@
         <br>
         Onboard computer: Manifold 2-C
         <br>
-        Software: DJI Onboard SDK 
+        Software: DJI Onboard SDK
         <br>
         On the ground: RTK base station (communicates with on-board RTK GPS for centimeter-accuracy location data)
         <br>
@@ -236,12 +236,12 @@
         <u>
         (b) What parts did you use to build your solution?
         </u>
-  
+
         <br>
         Commercial off the shelf parts listed above
         <br>
         <br>
-      
+
         <u>
         (c) Describe any software you wrote in detail. Illustrate with diagrams, flow charts, and/or other appropriate visuals. This includes launch files, URDFs, etc.
         </u>
@@ -255,7 +255,7 @@
 
         VR:
         <br>
-        The virtual reality application was built using Unity, C#, the ROSBridgeWebsocket library and numerous Unity assets. We used the .NET unity library to create a REST API endpoint for the server to send the user information to with C# code to parse the response and visualize a pointer for the VR operator to be informed of the user’s general location. Unity assets for 3D buttons along with C# scripts are used to create the user interface to enable operators to create and define a search region in the virtual reality interface. The drone class to create the virtual drone gameobject is written to spawn a websocket connection to the drone’s onboard computer using the ROSBridgeWebsocket library. This class subscribes to the drone’s position, localizes it and constantly updates the VR user interface to inform the operator of a drone’s real-world position. This class also contains all the functionality to call ROS services hosted on the drone’s onboard computer and is used to trigger functionality as per the VR operators needs. We further created the abstract custom service calls and message types classes that can scale as required. 
+        The virtual reality application was built using Unity, C#, the ROSBridgeWebsocket library and numerous Unity assets. We used the .NET unity library to create a REST API endpoint for the server to send the user information to with C# code to parse the response and visualize a pointer for the VR operator to be informed of the user’s general location. Unity assets for 3D buttons along with C# scripts are used to create the user interface to enable operators to create and define a search region in the virtual reality interface. The drone class to create the virtual drone gameobject is written to spawn a websocket connection to the drone’s onboard computer using the ROSBridgeWebsocket library. This class subscribes to the drone’s position, localizes it and constantly updates the VR user interface to inform the operator of a drone’s real-world position. This class also contains all the functionality to call ROS services hosted on the drone’s onboard computer and is used to trigger functionality as per the VR operators needs. We further created the abstract custom service calls and message types classes that can scale as required.
         <br>
         <br>
 
@@ -264,11 +264,11 @@
         <br>
         Image Processing
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         Occupancy grid
         <br>
-        Apollo Thomopoulos 
+        Apollo Thomopoulos
         <br>
         Search algo
         <br>
@@ -294,7 +294,7 @@
         <br>
         1. A customer places an order with their world coordinates.
         <br>
-        2. An operator in VR creates a waypoint mission for the quadrotor to the user area. 
+        2. An operator in VR creates a waypoint mission for the quadrotor to the user area.
         <br>
         3. The operator in VR creates a search area and uploads the mission to the quadrotor
         <br>
@@ -302,7 +302,7 @@
         <br>
         5. The quadrotor autonomously searches the target area by creating an occupancy grid of obstacles using onboard cameras and performing a depth first search.
         <br>
-        6. [Ran out of time] The quadrotor detects a QR code indicating the precise location of the delivery and lands.   
+        6. [Ran out of time] The quadrotor detects a QR code indicating the precise location of the delivery and lands.
         <br>
 
       </p>
@@ -311,16 +311,16 @@
       <h1 class="display-4"> Project Results </h1>
       <p class="lead">
         <br>
- 
+
         <u>
         (a) How well did your project work? What tasks did it perform?
         </u>
-  
+
         <br>
-        Overall, we are very happy with the progress we made over the course of the semester. All our key components (VR, Vision, Search, Hardware) are successfully integrated and worked. We wish to conduct a real-world flight test when permitted by COVID-19 regulations but based on the success in the realistic DJI sim we are confident that our application will succeed. 
+        Overall, we are very happy with the progress we made over the course of the semester. All our key components (VR, Vision, Search, Hardware) are successfully integrated and worked. We wish to conduct a real-world flight test when permitted by COVID-19 regulations but based on the success in the realistic DJI sim we are confident that our application will succeed.
         <br>
         <br>
-        
+
         <u>
         (b) Illustrate with pictures and at least one video
         </u>
@@ -351,9 +351,9 @@
         <u>
         (a) Discuss your results. How well did your finished solution meet your design criteria?
         </u>
-  
+
         <br>
-        Overall, we are very happy with the progress we made over the course of the semester. All our key components (VR, Vision, Search, Hardware) are successfully integrated and worked. We wish to conduct a real-world flight test when permitted by COVID-19 regulations but based on the success in the realistic DJI sim we are confident that our application will succeed. 
+        Overall, we are very happy with the progress we made over the course of the semester. All our key components (VR, Vision, Search, Hardware) are successfully integrated and worked. We wish to conduct a real-world flight test when permitted by COVID-19 regulations but based on the success in the realistic DJI sim we are confident that our application will succeed.
         <br>
         We understand that flying in sim can sound disappointing, and obviously it's different from flying in the real world. But at the same time, we want to emphasize a few things:
         <br>
@@ -364,7 +364,7 @@
         <u>
         (b) Did you encounter any particular difficulties?
         </u>
-  
+
         <br>
         Calibrating real world camera is annoying
         <br>
@@ -429,7 +429,7 @@
         <br>
         The following UC Berkley students developed this project for the EECS 106A Class.
       </p>
-           
+
       <br>
 
       <div class="card-deck">
@@ -471,9 +471,9 @@
             <img class="card-img-top" src="{{ url_for('static', filename='peru.jpg') }}" alt="Card image cap">
           </div>
           <div class="card-body">
-            <h5 class="card-title"> Apollo Thx. </h5>
+            <h5 class="card-title">Apollo θ</h5>
             <p class="card-text">
-            -- Placeholder for Role -- 
+            -- Placeholder for Role --
             <br>
             -- Placeholder for Work Done --
             </p>
@@ -493,17 +493,16 @@
       <p class="lead">
         <br>
         Github Links:
-        WebApp: https://github.com/apollovision/robotics_final_project/tree/master/WebApp
-        VR: https://github.com/immersive-command-system/ImmersiveDroneInterface_2/tree/106a-proj
-        Vision & search: https://github.com/apollovision/robotics_final_project
+        Autonomy Package: https://github.com/apollovision/isaacs_autonomy
+        VR Interface: https://github.com/immersive-command-system/ImmersiveDroneInterface_2/tree/106a-proj
         <br>
         Hardware Information:
-        M210: 
+        M210:
         Product: https://www.dji.com/matrice-200-series
         Specs: https://www.dji.com/matrice-200-series/info#specs
-        RTK Station: 
+        RTK Station:
         Product: https://www.dji.com/d-rtk-2
-        Manifold 2C: 
+        Manifold 2C:
         Product: https://www.dji.com/manifold-2
         Specs: https://www.dji.com/manifold-2/specs
         DJI Simulator:
