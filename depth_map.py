@@ -13,10 +13,11 @@ class DepthMap:
     # Receive a disparity map and convert it to a usable depth measure.
     def update(self, disparity, pitch, roll, f=None):
 
-        # Median blur the disparity image to
+        # Median blur the disparity image to remove noise.
         disparity = cv2.medianBlur(disparity, 5)
 
-        # Convert the disparity dtype to float32.
+        # Convert the disparity dtype to float32 to
+        # faciliate the subsequent projections.
         disparity = disparity/255.
 
         # Warp the depth map such that it is parallel to the
@@ -79,7 +80,7 @@ class DepthMap:
         T = np.identity(4)
         T[2][3] = f
 
-        # The camera Intrinsic Matrix.
+        # The camera Intrinsic Matrix. Equally, the 3D-to-2D-Projection Matrix.
         K = np.array([
                      [f,    0,  w/2,    0],
                      [0,    f,  h/2,    0],
@@ -89,16 +90,16 @@ class DepthMap:
         # The Perspective Transformation Matrix.
         perspective = np.matmul(K, np.matmul(T, np.matmul(R, X)))
 
-        # The interpolation can be changed to INTER_LANCZOS4
-        # for better quality if speed is not an issue.
+        # The interpolation can be changed to INTER_LINEAR
+        # for slightly worst quality if speed is an issue.
         im = cv2.warpPerspective(im, perspective, (w, h),
-                                 flags=cv2.INTER_LINEAR)
+                                 flags=cv2.INTER_LANCZOS4)
 
         return im
 
-    # Return the highest value of each colun of the given image.
+    # Return the highest value of each column of the given image.
     # If `im` is a 2D depth map, this reduces it down to a 1D array of depths.
-    # `pct` indicates what percentage from the center of the iamge should be
+    # `pct` indicates what percentage from the center of the image should be
     # used (the rest will be discarded).
     def maxpool_columns(self, im, pct=.4):
         dh = int(pct * im.shape[0])

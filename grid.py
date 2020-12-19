@@ -61,13 +61,13 @@ class Grid:
         u_dz = np.sin(yaw_map) * depth_map
 
         # Convert the position of the obstacle to grid coordinates.
+        # `o` stands for occupied, `u` stands for unoccupied.
         o_x = np.ceil(x + o_dx).astype(np.int32)
         o_z = np.ceil(z + o_dz).astype(np.int32)
         u_x = np.ceil(x + u_dx).astype(np.int32)
         u_z = np.ceil(z + u_dz).astype(np.int32)
 
-        # NumPy and OpenCV begin indexing from the top-left corner, which means
-        # that the robot's y must be adjusted to match grid coordinates.
+        # NumPy and OpenCV begin indexing from the top-left corner.
         x = int(np.floor(x))
         z = int(np.floor(z))
 
@@ -77,11 +77,13 @@ class Grid:
         box_len = 2*max_depth + 1
         box = np.zeros((box_len, box_len)).astype(self.grid.dtype)
 
+        # Trace the obstacles.
         o_points = np.stack([o_x, o_z]).T
         o_points = o_points - np.array([x-max_depth, z-max_depth])
         o_points = np.vstack([np.array([max_depth, max_depth]), o_points])
         cv2.fillPoly(box, [o_points], -1, cv2.LINE_8)
 
+        # "Project" the quadrotor's FOV on the grid by raytracing it.
         u_points = np.stack([u_x, u_z]).T
         u_points = u_points - np.array([x-max_depth, z-max_depth])
         u_points = np.vstack([np.array([max_depth, max_depth]), u_points])
@@ -99,6 +101,8 @@ class Grid:
             z1 = 0
         z2 = z + max_depth + 1
 
+        # Update the grid by adding to it the box in which the quadrotor's FOV
+        # was projected, and the map was raytraced.
         self.grid[z1:z2, x1:x2] = self.grid[z1:z2, x1:x2] + box
 
         return self.grid
