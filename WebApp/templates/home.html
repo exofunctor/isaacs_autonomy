@@ -35,6 +35,97 @@
       </blockquote>
       <br>
 
+
+      <!--
+        <br>
+        <h3 align="middle">0. Setup sensor streams to receive readings for 3D position, 3D Euler angles, and a front disparity image. </h3>
+        <h3 align="middle">1. Process the disparity image with a median filter to remove noise. </h3>
+        <h3 align="middle">2. Warp the disparity image using a 3D-rototranslational model, to account for the quadrotor's elevation, pitch and roll. </h3>
+        <br>
+
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/adjust1.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/adjust2.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+            <tr>
+            <td>
+              <img src="static/adjust3.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/adjust4.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+
+        <br>
+        <br>
+        <h3 align="middle">3. The disparity map rows are now parallel to the grid plane. Select only a small number of them, close to the intersection.</h3>
+
+        <h3 align="middle">4. Max pool vertically from the selected rows, in order to "collapse" them into a 1D array of depths.</h3>
+        <br>
+
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/disparity.gif" class="thumbnail" align="middle" width="700px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+
+        <br>
+        <br>
+        <h3 align="middle">5. Project the quadrotor's field of view on the grid plane, and use the 1D array of depths to localize any obstacles within it. </h3>
+        <h3 align="middle">6. Raytrace the quadrotor's field of view projection, to update the occupancy grid.</h3>
+        <br>
+
+
+
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/map1.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/map3.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+        <br>
+        <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/grid.gif" class="thumbnail" align="middle" width="700px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+        <br>
+        <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/map2.png" class="thumbnail" align="middle" width="600px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+    -->
+
+
       <h1 class="display-4"> Project Aim </h1>
       <p class="lead">
         <br>
@@ -103,6 +194,11 @@
         </u>
 
         <br>
+        <br>
+
+        <img src="static/system.png" align="middle" width="1100px">
+
+        <br>
         Due to the various technologies and components involved in our system, we choose a modular system architecture to streamline unit testing, ease of integration and future scalability.
         <br>
         <br>
@@ -121,19 +217,38 @@
 
         Drone hardware:
         <br>
-        We are using the DJI Matrice 210 as our physical drone. It has the Manifold 2-C as its onboard computer running the DJI Onboard SDK, as well our ROS node isaacs_autonomy. The drone has an RTK GPS, which communicates with an on-ground RTK base station. It also has stereoscopic cameras that we are using to create a depth map.
+        We are using the DJI Matrice 210 as our physical drone. It is a small-sized UAV, which for the purpose of our project, can be modelled as a sphere of 0.887 m radius. Moreover, it is mounted with the Manifold 2-C onboard computer running the DJI Onboard SDK, as well as our ROS node isaacs_autonomy. The drone has an RTK GPS, which communicates with an on-ground RTK base station and publishes at a rate of 50 Hz. It also has a 100 Hz gyroscope, and a pair of 240p 60×54° FOV stereoscopic cameras publishing at 10 Hz. We are furthermore able to extract from the cameras a disparity image that provides an accurate scan of the environment at 0.7 and upto 30 m away from the quadrotor.
+        <br>
+        <br>
+
+        Calibration:
+        <br>
+        We calibrate the sensor readings such that they provide information relative to the reference frame from which the quadrotor will begin its search. We also make certain unit conversions to facilitate our work. In more detail, we convert the gyroscope’s readings from quaternions to Eulers angles, and the RTK GPS’ readings from LLA of a WGS84 ellipsoid to Cartesian ENU.
+        <br>
+        <br>
+
+        Vision problem statement:
+        <br>
+        The goal of the vision system we built is to quickly and accurately update a 2D grid that the quadrotor can use  to navigate. The grid is initiated as a 2D array of signed 8-bit integers, with each entry representing a discrete unit equal to the qudrotor’s diameter (0.887 m). Positive values in an entry indicate that this cell is free, while negative values that it is occupied, and therefore inaccessible. To update the grid, a 360×240 disparity image is available at a rate of 10 Hz, along with potentially helpful information from the RTK GPS and Gyroscope.
         <br>
         <br>
 
         Image processing:
         <br>
-        Apollo Thomopoulos
+        We begin by blurring the disparity image with a median filter of kernel size 5, in order to eliminate noise. The choice of filter was made taking into consideration both the quality of the resulting image, and actual runtime. In practice, its major competitor, the Gaussian filter, was faster, but not faster enough to justify its use over the median filter – it provided less than 50% speedup at the cost of a significantly more noisy image or information loss (when its standard deviation became very large, the disparity map turned uniformly gray).
+        <br>
+        Next, once the denoising was over, we had to account for the fact that as the drone rotated around its three principal axes—or moved along them—, the disparity image we received would correspond to different places in the world. Therefore, its geometric relationship with the plane of interest (the one where we build the occupancy grid), differs from the one that the disparity image taken in the reference frame has with that very plane. Put simply, in the reference frame, the middle row of the disparity image is where the image intersects the grid plane, and the few rows above and below provide an envelope for the quadrotor’s height (note: as such the occupancy grid plane is not really a plane, but a cuboid with a very small height – more on this later). In the body frame, however, the occupancy grid plane may correspond to a diagonal in the disparity image.
+        <br>
+        As such, before using the disparity map, we had to warp it using a 3D roto translational model, similar to one we would use to change coordinate frames. In this case, however, the story was a bit more complicated than multiplying by an SO3 matrix, as we first had to recover the camera’s intrinsic parameters, to accurately represent the 2D to 3D and then 3D to 2D reprojection. 
+        Moreover, we had to ensure that the pixel mapping between projections preserved as much information as possible. We therefore used an inverse warp alongside a Lancosz interpolation. The latter was chosen over the faster bilinear interpolation because of the higher quality results it tends to produce. Similarly to the median filter, the performance hit was small enough in comparison to the significance of the information preserved to justify its use. All in all, after the full round of processing, the disparity image was still available at a rate of 10 Hz.
         <br>
         <br>
 
         2D occupancy grid:
         <br>
-        Apollo Thomopoulos
+        Upon receiving the processed disparity map, we select a small region around its middle row, and discard the rest. This is because, after the processing, we know that the middle row corresponds to where the disparity image intersects the grid plane, and the few rows above and below can be useful as the drone has a non-negligible height, and they can also be used to correct potential errors. In practice, we discard about 60% of the original disparity map, and then do a max pool along each column of the remaining 40%. The max pool is chosen over the weighted average, or any other downsampling operation, because even if a very small depth (= large disparity value) is present on the very edge of the selected region, the quadrotor may crash in it (again, the selected region “envelopes” the quadrotor plus accounts for a margin of error).
+        <br>
+        Once the max pool has finished, what we are essentially left with is a 1D array of depths, indicating the obstacles to be found within the quadrotor’s FOV projected upon the grid plane. As such, the grid update problem now reduces to 2D raytracing, where each depth reading gets corresponded to an angle, such that the ray from the quadrotor’s camera along that angle draws the map in that direction. For the raytrace, we use OpenCV’s draw functions. This is perhaps the heavier part of the code, but is still fairly fast, having a period of less than 0.1s. In the end, our 2D occupancy grid is updated at about 9 Hz, which, considering our actual camera rate of 10 Hz, is excellent.
         <br>
         <br>
 
@@ -170,24 +285,17 @@
         <br>
         <br>
 
-        Image Processing
+        Vision:
         <br>
-        Apollo Thomopoulos
+        Other than the aforementioned implementation trade-offs, the very fact of utilising a 2D grid came with its own set of benefits and flaws. On the one hand, fixing the flight height meant that the totality of vision would mostly reduce to projective geometry, which guarantees robustness, because its mathematics are deterministic. On the other hand, given that the quadrotor’s dynamics are inherently 3-dimensional, the perception system becomes a bottleneck to the actuation system. This is especially true for a quadrotor, which, being an underactuated nonlinear system, relies on linear combinations of rotations along its principal axes to perform translational movement. Put simply, the quadrotor can move along the plane normal to its thrust only by changing its attitude, which translates very poorly to 2D.
+        <br>
+        Ultimately, we chose to go with 2D because it would make it easier to write a search algorithm for it, and our quadrotor’s SDK abstracts away most of the dynamics. Furthermore, given that our goal was to create a proof-of-concept system, we thought that integration matters more than the individual parts: having a fully working system with 2D navigation would be a greater success than individually, but not collectively, working 3D vision and navigation. Moreover, going with 3D vision would almost certainly necessitate the presence of segmentation, which is extremely compute-heavy. The onboard computer we use only has a CPU, and therefore can hardly support any operations that rely on high parallelisation.
+        <br>
+        We furthermore have to note that the cameras we had at our disposal were barely able to support 2D vision, not to mention 3D vision. They were, for one, extremely FOV limited, very low refresh-rate, and very prone to noise. We truly did magic on the vision end, in that we optimised the code in every imaginable way (for example, we raytrace with one function call to OpenCV’s drawRectangle, rather than multiple calls to drawLine in a for loop). 3D vision would have required much better hardware.
         <br>
         <br>
 
-        2D Occupancy Grid Node
-        <br>
-        Apollo Thomopoulos
-        <br>
-        3D
-        More space
-        Need more FOV on cameras (how do we know the area directly above the drone is empty)
-        More complicated search algorithm
-        And at the end of the day, it's not much more effective
-        Only benefit is maneuvering around complex shaped obstacles
-        Not viable in the time period
-        Have access to drone’s position and attitude, so easy to fill in the grid
+        Exploration algorithm + control:
         <br>
         The main reason for choosing the flood fill algorithm was that it searches every single open space, while avoiding all obstacles. It also lets us constantly update the occupancy grid as we fly. The drone control it uses (moving forward/backward/left/right one cell at a time) also integrated well with the DJI SDK’s control API. In addition, and very importantly, the flood fill algorithm is very robust, reliable, and easily visualized. We could have tried using a machine learning model, but those aren’t as robust, and we can’t know for sure why the drone chose its next move. With the flood fill, we know how it chooses the next move, and can predict what it’ll do next. With an expensive physical drone, this is highly valuable as we can’t risk any unpredictable behavior that can cause a crash.
         <br>
@@ -197,7 +305,20 @@
         (d) How do these design choices impact how well the project meets design criteria that would be encountered in a real engineering application, such as robustness, durability, and efficiency?
         </u>
         <br>
-        Overall we did well.
+        Overall we did quite well.
+        <br>
+        - The vision system is robust, despite being deployed in somewhat unreliable hardware. The quadrotor loses critical sense of sight only when an object is within 0.7 m in its FOV, which is acceptable. The median filter is able to remove most of the noise in the disparity image, giving an accurate and usable reading.
+        <br>
+        - The map is updated at 9~10 Hz, which effectively means that our vision system is extremely, extremely efficient.
+        <br>
+        - When it comes to mapping methods, occupancy grids are much more memory-heavy than meshes, but offer faster operation runtimes. That said, in 2D, all memory impacts are minimal, signifying that the occupancy grid is the superior choice, offering the best of both worlds in terms of memory and runtime efficiency.
+        <br>
+        - Explore efficiency can be increased by gaining information about all directions at every cell by adding cameras or rotating the drone around
+        Usage of M210 drone and SDK ensures durability and scalability to other drones.
+        <br>
+        - VR architecture supports scalability to multiple drones.
+        <br>
+        - VR visualizations highly effective/ easy to understand whats going on
         <br>
         <br>
 
@@ -217,7 +338,7 @@
         <br>
         Drone: DJI Matrice 210
         <br>
-        Onboard sensors: RTK GPS, stereo cameras
+        Onboard sensors: RTK GPS (50 Hz), Gyroscope (100 Hz), Stereo Cameras (10 Hz, 240p, 60×54° FOV)
         <br>
         Onboard computer: Manifold 2-C
         <br>
@@ -262,27 +383,25 @@
 
         ROS “isaacs_autonomy” Node essentially does 3 things: All written in Python
         <br>
-        Image Processing
+        1. Sensor Streams: Explained Above
         <br>
-        Apollo Thomopoulos
+        2. Image Processing: Explained Above
         <br>
-        Occupancy grid
+        3. Occupancy grid: Explained Above
         <br>
-        Apollo Thomopoulos
-        <br>
-        Search algo
+        4. Search Algorithm:
         <br>
         The search algorithm takes in a radius in meters as a parameter. It then attempts to traverse every cell in that radius, unless there is an obstacle. It uses the occupancy grid to understand the environment (is a space occupied/unoccupied/unknown), and has its own 2d array of visited/unvisited cells.
         <br>
         It is a recursive algorithm that checks the appropriate neighbor’s cell and if it's unoccupied+unvisited:
         <br>
-        Moves up, and recurses.
+        - Moves up, and recurses.
         <br>
-        Moves down, and recurses
+        - Moves down, and recurses
         <br>
-        Moves right, and recurses
+        - Moves right, and recurses
         <br>
-        Moves left, and recurses
+        - Moves left, and recurses
         <br>
         It is a depth first search as it visits a cell’s neighbors’ neighbors before visiting all of its own neighbors. It also updates the occupancy grid as the drone moves, to ensure we have up-to-date info about obstacles.
         <br>
@@ -331,6 +450,7 @@
         </div>
         <br>
 
+<!--
         <p class="lead">
           <br>
           A video demo of the full project: (TODO: Update)
@@ -341,6 +461,8 @@
         </div>
 
         <br>
+-->
+
         <br>
         <br>
 
@@ -366,49 +488,47 @@
         </u>
 
         <br>
-        Calibrating real world camera is annoying
+        1. Calibrating real world camera is annoying
         <br>
-        Drone cameras were not the best
+        2. Drone cameras were not the best
         <br>
-        Creating local networks for drone flights is painful
+        3. Creating local networks for drone flights is painful
         <br>
-        Setting up and testing with the DJI sim is also painful
+        4. Setting up and testing with the DJI sim is also painful
         <br>
-        Testing the DJI SDK was painful
+        5. Testing the DJI SDK was painful
         <br>
-        Limited access to equipment/only 2 days in RFS
+        6. Limited access to equipment/only 2 days in RFS
         <br>
-        When we did have access, had to keep recharging batteries (drone batteries aren't great)
+        7. When we did have access, had to keep recharging batteries (drone batteries aren't great)
         <br>
-        Limited daylight to fly drones
+        8. Limited daylight to fly drones
         <br>
-        GPS hardware localization was spotty
+        9. GPS hardware localization was spotty
         <br>
-        Flight checklist/safety precautions
+        10. Flight checklist/safety precautions
         <br>
-        Drone is expensive
+        - Can’t just go out and fly autonomously
         <br>
-        can’t just go out and fly autonomously
+        - Cant make small changes and keep testing
         <br>
-        Cant make small changes and keep testing
+        - With ML models, you crash a million times before it works once
         <br>
-        With ML models, you crash a million times before it works once
+        - With physical, expensive drones, has to work every single time
         <br>
-        With physical, expensive drones, has to work every single time
+        - Need robust calibration
         <br>
-        Need robust calibration
+        - x/y flight test
         <br>
-        x/y flight test
+        - Set waypoints directly above 4 corners of the building, and make sure it lines up
         <br>
-        Set waypoints directly above 4 corners of the building, and make sure it lines up
+        - Need spotters from different angles because depth perception is weird
         <br>
-        Need spotters from different angles because depth perception is weird
+        - Altitude test
         <br>
-        Altitude test
+        - Set waypoints at window height to make sure altitude matches
         <br>
-        Set waypoints at window height to make sure altitude matches
-        <br>
-        Now that we trust x/y/z conversion between real world GPS and our Unity VR interface, we can actually run flight tests
+        - Now that we trust x/y/z conversion between real world GPS and our Unity VR interface, we can actually run flight tests
         <br>
         <br>
 
@@ -438,9 +558,15 @@
           <div class="card-body">
             <h5 class="card-title">Peru Dayani</h5>
             <p class="card-text">
-            -- Placeholder for Role --
+            Project Manager and VR/Web developer
             <br>
-            -- Placeholder for Work Done --
+            - VR Developer
+            <br>
+            - Web Developer
+            <br>
+            - Project Manager
+            <br>
+            - Way too much Debugging
             </p>
             <p class="card-text">
             EECS @ UC Berkeley
@@ -450,16 +576,17 @@
         </div>
         <div class="card">
           <div style="width:349px ;height:350px ;overflow:hidden">
-            <img class="card-img-top" src="{{ url_for('static', filename='peru.jpg') }}" alt="Card image cap">
+            <img class="card-img-top" src="{{ url_for('static', filename='varun.jpeg') }}" alt="Card image cap">
           </div>
           <div class="card-body">
             <h5 class="card-title">Varun Saran</h5>
             <p class="card-text">
-            -- Placeholder for Role --
+            Search Algorithm and Hardware
             <br>
-            -- Placeholder for Work Done --
+            - Search Developer
+            <br>
+            - Hardware Manager
             </p>
-            <br>
             <p class="card-text">
             EECS @ UC Berkeley
             </p>
@@ -468,20 +595,21 @@
         </div>
         <div class="card">
           <div style="width:349px ;height:350px ;overflow:hidden">
-            <img class="card-img-top" src="images/Apollo.png" alt="Card image cap">
+            <img class="card-img-top" src="{{ url_for('static', filename='Apollo.png') }}" alt="Card image cap">
           </div>
           <div class="card-body">
             <h5 class="card-title">Apollo θ</h5>
             <p class="card-text">
             Vision and Integration
             <br>
-            - Hardware Setup
-            - System Integration
             - Sensor Calibration
+            <br>
             - Sensor Streams
-            - Image Processing
-            - Occupancy Grid
-            </p>
+            <br>
+            - Disparity Image Processing
+            <br>
+            - Grid Creation and Updating
+            <br>
             <p class="card-text">
             EECS @ UC Berkeley
             </p>
@@ -497,21 +625,31 @@
       <h1 class="display-4"> Additional Materials </h1>
       <p class="lead">
         <br>
-        Github Links:
-        Autonomy Package: https://github.com/apollovision/isaacs_autonomy
-        VR Interface: https://github.com/immersive-command-system/ImmersiveDroneInterface_2/tree/106a-proj
+        Autonomy Package: <a href="https://github.com/apollovision/isaacs_autonomy"> Link </a>
         <br>
-        Hardware Information:
+        VR Interface: <a href="https://github.com/immersive-command-system/ImmersiveDroneInterface_2/tree/106a-proj"> Link </a>
+        <br>
+        WebApp: <a href="https://github.com/apollovision/robotics_final_project/tree/master/WebApp">Link</a>
+        <br>
         M210:
-        Product: https://www.dji.com/matrice-200-series
-        Specs: https://www.dji.com/matrice-200-series/info#specs
+        <br>
+        Product: <a href="https://www.dji.com/matrice-200-series">Link</a>
+        <br>
+        Specs: <a href="https://www.dji.com/matrice-200-series/info#specs">Link</a>
+        <br>
         RTK Station:
-        Product: https://www.dji.com/d-rtk-2
+        <br>
+        Product: <a href="https://www.dji.com/d-rtk-2">Link</a>
+        <br>
         Manifold 2C:
-        Product: https://www.dji.com/manifold-2
-        Specs: https://www.dji.com/manifold-2/specs
+        <br>
+        Product: <a href="https://www.dji.com/manifold-2">Link</a>
+        <br>
+        Specs: <a href="https://www.dji.com/manifold-2/specs">Link</a>
+        <br>
         DJI Simulator:
-        Product: https://www.dji.com/downloads/softwares/assistant-dji-2-for-matrice
+        <br>
+        Product: <a href="https://www.dji.com/downloads/softwares/assistant-dji-2-for-matrice">Link</a>
       </p>
       <br>
 
