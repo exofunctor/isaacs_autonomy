@@ -27,10 +27,10 @@
 
     <div class="container" >
 
-      <h1 class="display-4"> EECS 106A Group Project </h1>
+      <h1 class="display-4"> Autonomous UAV Package Delivery </h1>
       <br>
       <blockquote class="blockquote text-center">
-        <p class="mb-0"> "A cool quote about drones and robotics"
+        <p class="mb-0"> "by the folks of the Immersive Semi-Autonomous Aerial Command System"
         </p>
       </blockquote>
       <br>
@@ -144,9 +144,9 @@
         </u>
 
         <br>
-        The FDA recently approved Amazon and UPS to experiment with UAV package delivery. We envision that by 2030, the vast majority of commodity trade will be accomplished by drones operating semi-autonomously. To achieve this, there are two key problems that need to be addressed:
+        The FDA recently approved Amazon and UPS to experiment with UAV package delivery. We envision that by 2030, the vast majority of commodity trade will be accomplished by UAVs operating semi-autonomously. To achieve this, there are two key problems that need to be addressed:
         <br>
-        1. The cognitive overload an operator faces in managing drones when they fly beyond line-of-sight.
+        1. The cognitive overload an operator faces in managing UAVs when they fly beyond line-of-sight.
         <br>
         2. The ability of a quadrotor to intelligently maneuver within a densely populated area as it approaches its drop-off target.
         <br>
@@ -159,7 +159,7 @@
         </u>
 
         <br>
-        The direct real world application we are focusing on is semi-autonomous drone package delivery. We further believe that different components of our work could be used in other industries as well. The autonomous search algorithm and control code can be adapted to work for search and rescue missions in hard to reach terrain and environments. The 3D real-time visualization in virtual reality can also help augment search and resume missions by providing a more intuitive environment for operators to conduct these missions. Finally, we can also see potential uses of our image segmentation algorithm in the agricultural field for precision agriculture use cases.
+        The direct real world application we are focusing on is semi-autonomous UAV package delivery. We further believe that different components of our work could be used in other industries as well. The autonomous search algorithm and control code can be adapted to work for search and rescue missions in hard to reach terrain and environments. The 3D real-time visualization in virtual reality can also help augment search and resume missions by providing a more intuitive environment for operators to conduct these missions. Finally, we can also see potential uses of our image segmentation algorithm in the agricultural field for precision agriculture use cases.
         <br>
         <br>
 
@@ -203,60 +203,142 @@
         <br>
         <br>
 
-        Web App:
+        <b>Web App:</b>
         <br>
         The Web application is built using Flask and deployed on Heroku. This was done to create a functional live application with minimal effort to focus on the more challenging aspects of the project. It supports a simple form to input a user’s order and sends this to the virtual reality application.
         <br>
         <br>
 
-        VR:
+        <b>VR Interface:</b>
         <br>
-        The virtual reality application is built on Unity and is an extension of the ISAACS research project. This approach was chosen as the ISAACS project provides the basic functionality required for the VR application to interface with the Matrice 210 drone. For this project, we had to create the HTTP endpoints for the web application to send the user information to the virtual reality application. We then had to extend the ISAACS architecture to support the autonomous search functionality that can be controlled by the user. This encapsulated creating the UI features, ROS service calls to the drone for waypoint missions and our custom node for search missions, and unit testing for all new features.
-        <br>
-        <br>
-
-        Drone hardware:
-        <br>
-        We are using the DJI Matrice 210 as our physical drone. It is a small-sized UAV, which for the purpose of our project, can be modelled as a sphere of 0.887 m radius. Moreover, it is mounted with the Manifold 2-C onboard computer running the DJI Onboard SDK, as well as our ROS node isaacs_autonomy. The drone has an RTK GPS, which communicates with an on-ground RTK base station and publishes at a rate of 50 Hz. It also has a 100 Hz gyroscope, and a pair of 240p 60×54° FOV stereoscopic cameras publishing at 10 Hz. We are furthermore able to extract from the cameras a disparity image that provides an accurate scan of the environment at 0.7 and upto 30 m away from the quadrotor.
+        The virtual reality application is built on Unity and is an extension of the ISAACS research project. This approach was chosen as the ISAACS project provides the basic functionality required for the VR application to interface with the Matrice 210 UAV. For this project, we had to create the HTTP endpoints for the web application to send the user information to the virtual reality application. We then had to extend the ISAACS architecture to support the autonomous search functionality that can be controlled by the user. This encapsulated creating the UI features, ROS service calls to the UAV for waypoint missions and our custom node for search missions, and unit testing for all new features.
         <br>
         <br>
 
-        Calibration:
+        <b>Drone hardware:</b>
+        <br>
+        We are using the DJI Matrice 210 as our physical UAV. It is a small-sized UAV, which for the purpose of our project, can be modelled as a sphere of 0.887 m radius. Moreover, it is mounted with the Manifold 2-C onboard computer running the DJI Onboard SDK, as well as our ROS node isaacs_autonomy. The UAV has an RTK GPS, which communicates with an on-ground RTK base station and publishes at a rate of 50 Hz. It also has a 100 Hz gyroscope, and a pair of 240p 60×54° FOV stereoscopic cameras publishing at 10 Hz. We are furthermore able to extract from the cameras a disparity image that provides an accurate scan of the environment at 0.7 and upto 30 m away from the quadrotor.
+        <br>
+        <br>
+
+        <b>Calibration:</b>
         <br>
         We calibrate the sensor readings such that they provide information relative to the reference frame from which the quadrotor will begin its search. We also make certain unit conversions to facilitate our work. In more detail, we convert the gyroscope’s readings from quaternions to Eulers angles, and the RTK GPS’ readings from LLA of a WGS84 ellipsoid to Cartesian ENU.
         <br>
         <br>
 
-        Vision problem statement:
+        <b>Vision Problem Statement:</b>
         <br>
-        The goal of the vision system we built is to quickly and accurately update a 2D grid that the quadrotor can use  to navigate. The grid is initiated as a 2D array of signed 8-bit integers, with each entry representing a discrete unit equal to the qudrotor’s diameter (0.887 m). Positive values in an entry indicate that this cell is free, while negative values that it is occupied, and therefore inaccessible. To update the grid, a 360×240 disparity image is available at a rate of 10 Hz, along with potentially helpful information from the RTK GPS and Gyroscope.
+        The goal of the vision system we built is to quickly and accurately update a 2D occupancy grid that the quadrotor can use  to navigate. The grid is initiated as a 2D array of signed 8-bit integers, with each entry representing a discrete unit equal to the qudrotor’s diameter (0.887 m). Positive values in an entry indicate that this cell is free, while negative values that it is occupied, and therefore inaccessible. To update the grid, a 360×240 disparity image is available at a rate of 10 Hz, along with potentially helpful information from the RTK GPS and Gyroscope.
         <br>
         <br>
 
-        Image processing:
+        <b>Image Processing:</b>
         <br>
+        <h3 align="middle">1. Process the disparity image with a median filter to remove noise. </h3>
         We begin by blurring the disparity image with a median filter of kernel size 5, in order to eliminate noise. The choice of filter was made taking into consideration both the quality of the resulting image, and actual runtime. In practice, its major competitor, the Gaussian filter, was faster, but not faster enough to justify its use over the median filter – it provided less than 50% speedup at the cost of a significantly more noisy image or information loss (when its standard deviation became very large, the disparity map turned uniformly gray).
         <br>
-        Next, once the denoising was over, we had to account for the fact that as the drone rotated around its three principal axes—or moved along them—, the disparity image we received would correspond to different places in the world. Therefore, its geometric relationship with the plane of interest (the one where we build the occupancy grid), differs from the one that the disparity image taken in the reference frame has with that very plane. Put simply, in the reference frame, the middle row of the disparity image is where the image intersects the grid plane, and the few rows above and below provide an envelope for the quadrotor’s height (note: as such the occupancy grid plane is not really a plane, but a cuboid with a very small height – more on this later). In the body frame, however, the occupancy grid plane may correspond to a diagonal in the disparity image.
+        <h3 align="middle">2. Warp the disparity image using a 3D-rototranslational model, to account for the quadrotor's elevation, pitch and roll. </h3>
+        Next, once the denoising was over, we had to account for the fact that as the UAV rotated around its three principal axes—or moved along them—, the disparity image we received would correspond to different places in the world. Therefore, its geometric relationship with the plane of interest (the one where we build the occupancy grid), differs from the one that the disparity image taken in the reference frame has with that very plane. Put simply, in the reference frame, the middle row of the disparity image is where the image intersects the grid plane, and the few rows above and below provide an envelope for the quadrotor’s height (note: as such the occupancy grid plane is not really a plane, but a cuboid with a very small height – more on this later). In the body frame, however, the occupancy grid plane may correspond to a diagonal in the disparity image.
         <br>
-        As such, before using the disparity map, we had to warp it using a 3D roto translational model, similar to one we would use to change coordinate frames. In this case, however, the story was a bit more complicated than multiplying by an SO3 matrix, as we first had to recover the camera’s intrinsic parameters, to accurately represent the 2D to 3D and then 3D to 2D reprojection. 
+        As such, before using the disparity map, we had to warp it using a 3D roto translational model, similar to one we would use to change coordinate frames. In this case, however, the story was a bit more complicated than multiplying by an SO3 matrix, as we first had to recover the camera’s intrinsic parameters, to accurately represent the 2D to 3D and then 3D to 2D reprojection.
         Moreover, we had to ensure that the pixel mapping between projections preserved as much information as possible. We therefore used an inverse warp alongside a Lancosz interpolation. The latter was chosen over the faster bilinear interpolation because of the higher quality results it tends to produce. Similarly to the median filter, the performance hit was small enough in comparison to the significance of the information preserved to justify its use. All in all, after the full round of processing, the disparity image was still available at a rate of 10 Hz.
         <br>
         <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/adjust1.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/adjust2.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+            <tr>
+            <td>
+              <img src="static/adjust3.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/adjust4.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
 
-        2D occupancy grid:
         <br>
-        Upon receiving the processed disparity map, we select a small region around its middle row, and discard the rest. This is because, after the processing, we know that the middle row corresponds to where the disparity image intersects the grid plane, and the few rows above and below can be useful as the drone has a non-negligible height, and they can also be used to correct potential errors. In practice, we discard about 60% of the original disparity map, and then do a max pool along each column of the remaining 40%. The max pool is chosen over the weighted average, or any other downsampling operation, because even if a very small depth (= large disparity value) is present on the very edge of the selected region, the quadrotor may crash in it (again, the selected region “envelopes” the quadrotor plus accounts for a margin of error).
+        <br>
+
+        <b>Occupancy Mapping:</b>
+        <br>
+        <h3 align="middle">3. The disparity map rows are now parallel to the grid plane. Select only a small number of them, close to the intersection.</h3>
+
+        <h3 align="middle">4. Max pool vertically from the selected rows, in order to "collapse" them into a 1D array of depths.</h3>
+        <br>
+        Upon receiving the processed disparity map, we select a small region around its middle row, and discard the rest. This is because, after the processing, we know that the middle row corresponds to where the disparity image intersects the grid plane, and the few rows above and below can be useful as the UAV has a non-negligible height, and they can also be used to correct potential errors. In practice, we discard about 60% of the original disparity map, and then do a max pool along each column of the remaining 40%. The max pool is chosen over the weighted average, or any other downsampling operation, because even if a very small depth (= large disparity value) is present on the very edge of the selected region, the quadrotor may crash in it (again, the selected region “envelopes” the quadrotor plus accounts for a margin of error).
+
+        <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/disparity.gif" class="thumbnail" align="middle" width="700px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+
+        <br>
+
+        <h3 align="middle">5. Project the quadrotor's field of view on the grid plane, and use the 1D array of depths to localize any obstacles within it. </h3>
+        <h3 align="middle">6. Raytrace the quadrotor's field of view projection, to update the occupancy grid.</h3>
+
         <br>
         Once the max pool has finished, what we are essentially left with is a 1D array of depths, indicating the obstacles to be found within the quadrotor’s FOV projected upon the grid plane. As such, the grid update problem now reduces to 2D raytracing, where each depth reading gets corresponded to an angle, such that the ray from the quadrotor’s camera along that angle draws the map in that direction. For the raytrace, we use OpenCV’s draw functions. This is perhaps the heavier part of the code, but is still fairly fast, having a period of less than 0.1s. In the end, our 2D occupancy grid is updated at about 9 Hz, which, considering our actual camera rate of 10 Hz, is excellent.
         <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/map1.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            <td>
+              <img src="static/map3.png" class="thumbnail" align="middle" width="400px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+        <br>
+        <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/grid.gif" class="thumbnail" align="middle" width="700px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+        <br>
+        <br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+            <td>
+              <img src="static/map2.png" class="thumbnail" align="middle" width="600px"/>
+            </td>
+            </tr>
+          </table>
+        </div>
+
+        <br>
         <br>
 
-        Exploration algorithm + control:
+        <b>Exploration algorithm + control</b>:
         <br>
         The explore algorithm is an extension of the “flood fill” algorithm. It uses a 2D occupancy grid to determine its next move. It is a recursive algorithm that performs a depth first search.
         <br>
-        For drone controls, the operator sets waypoints. These waypoints are sent to the DJI SDK, and the drone then flies to each of the waypoints. These waypoints can be spaced far apart. For the search algorithm, however, we can’t just use waypoints as we don’t know how much space is open, or whether there is an obstacle on the way to our destination. This information only comes in as we fly. So instead, we control the drone with much finer, incremental movements in the XY plane. For our purposes, we are flying at a fixed height, so we don’t need to move in the Z direction. By moving incrementally in the XY plane, we never commit to moving a large distance. Instead, we move a small amount (which we know is unoccupied), update our occupancy grid, and then make the next decision.
+        For UAV controls, the operator sets waypoints. These waypoints are sent to the DJI SDK, and the UAV then flies to each of the waypoints. These waypoints can be spaced far apart. For the search algorithm, however, we can’t just use waypoints as we don’t know how much space is open, or whether there is an obstacle on the way to our destination. This information only comes in as we fly. So instead, we control the UAV with much finer, incremental movements in the XY plane. For our purposes, we are flying at a fixed height, so we don’t need to move in the Z direction. By moving incrementally in the XY plane, we never commit to moving a large distance. Instead, we move a small amount (which we know is unoccupied), update our occupancy grid, and then make the next decision.
         <br>
         <br>
 
@@ -265,22 +347,22 @@
         </u>
 
         <br>
-        Web App:
+        <b>Web App:</b>
         <br>
         The three key components of the web application were a user interface to input an order, ability to relay this information to the virtual reality application and to deploy this application. These were accomplished efficiently by Flask and Heroku and hence we choose these over other alternatives such as Django, Node.js, AWS, GCP, etc.
         <br>
         <br>
 
-        VR Application:
+        <b>VR Application:</b>
         <br>
-        The three key components of the virtual reality application were the HTTP endpoint for the web application, the user interface for the operator to define and control the search mission, and finally the ROS architecture to relay these commands to the DJI SDK. The key design choice we had was to either extend the abstract drone & user interface classes to ensure future scalability at the cost of time or develop these features as one-offs faster. As we wish to continue this project past the class and contribute to the research project we decided to extend the current drone abstractions to support a search algorithm which can be customized for each drone as needed, with our search algorithm chosen for the Matrice 210 drone. We did the same for the user interface so that the ability to create a search region and relay it to a drone is scaled to all connected drones instead of just the Matrice 210. Finally, we added the custom ROS service calls, message types and service definitions as abstract classes/methods that can be customized by to scale for other drones and projects.
+        The three key components of the virtual reality application were the HTTP endpoint for the web application, the user interface for the operator to define and control the search mission, and finally the ROS architecture to relay these commands to the DJI SDK. The key design choice we had was to either extend the abstract UAV & user interface classes to ensure future scalability at the cost of time or develop these features as one-offs faster. As we wish to continue this project past the class and contribute to the research project we decided to extend the current UAV abstractions to support a search algorithm which can be customized for each UAV as needed, with our search algorithm chosen for the Matrice 210 UAV. We did the same for the user interface so that the ability to create a search region and relay it to a UAV is scaled to all connected UAVs instead of just the Matrice 210. Finally, we added the custom ROS service calls, message types and service definitions as abstract classes/methods that can be customized by to scale for other UAVs and projects.
         <br>
         <br>
 
-        Drone:
+        <b>UAV:</b>
         <br>
-        In our lab, we had access to the DJI Matrice 210, Matrice 600, and Phantom drones.
-        The M210 and M600 have an easy to use Onboard SDK that lets us use ROS to control the drones, and publishes various drone state information (battery life, GPS position, camera stream). This eliminated the Phantom as a choice. The M210 and M600 also both have RTK GPS, which lets us easily localize the drone.
+        In our lab, we had access to the DJI Matrice 210, Matrice 600, and Phantom UAVs.
+        The M210 and M600 have an easy to use Onboard SDK that lets us use ROS to control the UAVs, and publishes various UAV state information (battery life, GPS position, camera stream). This eliminated the Phantom as a choice. The M210 and M600 also both have RTK GPS, which lets us easily localize the UAV.
         The M210 has on-board stereo cameras, which was the main reason we chose to use it over the M600. Additionally, the M600 is much bigger, and more expensive, so we didn’t want to risk using it. Since the M210 is smaller, it can reach more places and fit in tighter spots than the M600.
         <br>
         <br>
@@ -297,7 +379,7 @@
 
         Exploration algorithm + control:
         <br>
-        The main reason for choosing the flood fill algorithm was that it searches every single open space, while avoiding all obstacles. It also lets us constantly update the occupancy grid as we fly. The drone control it uses (moving forward/backward/left/right one cell at a time) also integrated well with the DJI SDK’s control API. In addition, and very importantly, the flood fill algorithm is very robust, reliable, and easily visualized. We could have tried using a machine learning model, but those aren’t as robust, and we can’t know for sure why the drone chose its next move. With the flood fill, we know how it chooses the next move, and can predict what it’ll do next. With an expensive physical drone, this is highly valuable as we can’t risk any unpredictable behavior that can cause a crash.
+        The main reason for choosing the flood fill algorithm was that it searches every single open space, while avoiding all obstacles. It also lets us constantly update the occupancy grid as we fly. The UAV control it uses (moving forward/backward/left/right one cell at a time) also integrated well with the DJI SDK’s control API. In addition, and very importantly, the flood fill algorithm is very robust, reliable, and easily visualized. We could have tried using a machine learning model, but those aren’t as robust, and we can’t know for sure why the UAV chose its next move. With the flood fill, we know how it chooses the next move, and can predict what it’ll do next. With an expensive physical UAV, this is highly valuable as we can’t risk any unpredictable behavior that can cause a crash.
         <br>
         <br>
 
@@ -313,10 +395,10 @@
         <br>
         - When it comes to mapping methods, occupancy grids are much more memory-heavy than meshes, but offer faster operation runtimes. That said, in 2D, all memory impacts are minimal, signifying that the occupancy grid is the superior choice, offering the best of both worlds in terms of memory and runtime efficiency.
         <br>
-        - Explore efficiency can be increased by gaining information about all directions at every cell by adding cameras or rotating the drone around
-        Usage of M210 drone and SDK ensures durability and scalability to other drones.
+        - Explore efficiency can be increased by gaining information about all directions at every cell by adding cameras or rotating the UAV around
+        Usage of M210 UAV and SDK ensures durability and scalability to other UAVs.
         <br>
-        - VR architecture supports scalability to multiple drones.
+        - VR architecture supports scalability to multiple UAVs.
         <br>
         - VR visualizations highly effective/ easy to understand whats going on
         <br>
@@ -376,7 +458,7 @@
 
         VR:
         <br>
-        The virtual reality application was built using Unity, C#, the ROSBridgeWebsocket library and numerous Unity assets. We used the .NET unity library to create a REST API endpoint for the server to send the user information to with C# code to parse the response and visualize a pointer for the VR operator to be informed of the user’s general location. Unity assets for 3D buttons along with C# scripts are used to create the user interface to enable operators to create and define a search region in the virtual reality interface. The drone class to create the virtual drone gameobject is written to spawn a websocket connection to the drone’s onboard computer using the ROSBridgeWebsocket library. This class subscribes to the drone’s position, localizes it and constantly updates the VR user interface to inform the operator of a drone’s real-world position. This class also contains all the functionality to call ROS services hosted on the drone’s onboard computer and is used to trigger functionality as per the VR operators needs. We further created the abstract custom service calls and message types classes that can scale as required.
+        The virtual reality application was built using Unity, C#, the ROSBridgeWebsocket library and numerous Unity assets. We used the .NET unity library to create a REST API endpoint for the server to send the user information to with C# code to parse the response and visualize a pointer for the VR operator to be informed of the user’s general location. Unity assets for 3D buttons along with C# scripts are used to create the user interface to enable operators to create and define a search region in the virtual reality interface. The UAV class to create the virtual UAV gameobject is written to spawn a websocket connection to the UAV’s onboard computer using the ROSBridgeWebsocket library. This class subscribes to the UAV’s position, localizes it and constantly updates the VR user interface to inform the operator of a UAV’s real-world position. This class also contains all the functionality to call ROS services hosted on the UAV’s onboard computer and is used to trigger functionality as per the VR operators needs. We further created the abstract custom service calls and message types classes that can scale as required.
         <br>
         <br>
 
@@ -403,7 +485,7 @@
         <br>
         - Moves left, and recurses
         <br>
-        It is a depth first search as it visits a cell’s neighbors’ neighbors before visiting all of its own neighbors. It also updates the occupancy grid as the drone moves, to ensure we have up-to-date info about obstacles.
+        It is a depth first search as it visits a cell’s neighbors’ neighbors before visiting all of its own neighbors. It also updates the occupancy grid as the UAV moves, to ensure we have up-to-date info about obstacles.
         <br>
         <br>
 
@@ -479,7 +561,7 @@
         <br>
         We understand that flying in sim can sound disappointing, and obviously it's different from flying in the real world. But at the same time, we want to emphasize a few things:
         <br>
-        The DJI Assistant 2 For Matrice simulator is not just any simulator, it is an industry grade simulator created by DJI themselves specifically for their drones. The Simulator only works when plugged into the physical drone as all physics, flight controller, measurement and other calculations take place on the drone’s flight controller itself. The flight controller is publishing and supporting all the same ROS functionality for control as a real flight, with only the rotors and gps data being simulated. In previous projects, after achieving successful flights in the DJI simulator, they have always transferred into successful real-world tests and therefore we are confident that we can achieve a full demo flight when we are able to conduct one.
+        The DJI Assistant 2 For Matrice simulator is not just any simulator, it is an industry grade simulator created by DJI themselves specifically for their UAVs. The Simulator only works when plugged into the physical UAV as all physics, flight controller, measurement and other calculations take place on the UAV’s flight controller itself. The flight controller is publishing and supporting all the same ROS functionality for control as a real flight, with only the rotors and gps data being simulated. In previous projects, after achieving successful flights in the DJI simulator, they have always transferred into successful real-world tests and therefore we are confident that we can achieve a full demo flight when we are able to conduct one.
         <br>
         <br>
 
@@ -492,7 +574,7 @@
         <br>
         2. Drone cameras were not the best
         <br>
-        3. Creating local networks for drone flights is painful
+        3. Creating local networks for UAV flights is painful
         <br>
         4. Setting up and testing with the DJI sim is also painful
         <br>
@@ -500,9 +582,9 @@
         <br>
         6. Limited access to equipment/only 2 days in RFS
         <br>
-        7. When we did have access, had to keep recharging batteries (drone batteries aren't great)
+        7. When we did have access, had to keep recharging batteries (UAV batteries aren't great)
         <br>
-        8. Limited daylight to fly drones
+        8. Limited daylight to fly UAVs
         <br>
         9. GPS hardware localization was spotty
         <br>
@@ -514,7 +596,7 @@
         <br>
         - With ML models, you crash a million times before it works once
         <br>
-        - With physical, expensive drones, has to work every single time
+        - With physical, expensive UAVs, has to work every single time
         <br>
         - Need robust calibration
         <br>
@@ -536,7 +618,7 @@
         (c) Does your solution have any flaws or hacks? What improvements would you make if you had additional time?
         </u>
         <br>
-        Every time we fly needs re-calibration of GPD with our VR interface. Even though our interface has fixed coordinates, and the GPS gives us absolute real-world coordinates, for some reason they wouldn't line up. As an example, if we place the drone by the corner of a building, and convert to our unity coordinates, it correctly shows up in our unity visualization. But if we turn everything off, and then on again, the drone shows up 15 feet off in our visualization, so we have to recalibrate everything.
+        Every time we fly needs re-calibration of GPS with our VR interface. Even though our interface has fixed coordinates, and the GPS gives us absolute real-world coordinates, for some reason they wouldn't line up. As an example, if we place the UAV by the corner of a building, and convert to our unity coordinates, it correctly shows up in our unity visualization. But if we turn everything off, and then on again, the UAV shows up 15 feet off in our visualization, so we have to recalibrate everything.
         <br>
         <br>
 
@@ -600,18 +682,21 @@
           <div class="card-body">
             <h5 class="card-title">Apollo θ</h5>
             <p class="card-text">
-            Vision and Integration
+            <br>
+            - Hardware Setup
+            <br>
+            - ROS Integration
             <br>
             - Sensor Calibration
             <br>
             - Sensor Streams
             <br>
-            - Disparity Image Processing
+            - Image Processing
             <br>
-            - Grid Creation and Updating
+            - Occupancy Grid
             <br>
             <p class="card-text">
-            EECS @ UC Berkeley
+            CS @ UC Berkeley
             </p>
             <a href="https://apollovision.github.io/" class="btn btn-primary">Website</a>
           </div>
