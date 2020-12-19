@@ -37,12 +37,10 @@ class StreamAttitude:
 
     def callback(self, data):
         # Decompose the message into a known data type (tuple).
-        attitude = (
-                    data.quaternion.x,
+        attitude = (data.quaternion.x,
                     data.quaternion.y,
                     data.quaternion.z,
-                    data.quaternion.w
-                   )
+                    data.quaternion.w)
 
         # Convert the Quaternion readings into Euler angles.
         euler_angles = self.Q2Euler(attitude)
@@ -58,7 +56,6 @@ class StreamAttitude:
         self.pitch_x = self.euler_angles[0]
         self.yaw_y = self.euler_angles[1]
         self.roll_z = self.euler_angles[2]
-        # print(self.euler_angles * 180 / np.pi)
 
     # Convert a quaternion `Q` into euler angles.
     def Q2Euler(self, Q):

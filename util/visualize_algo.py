@@ -1,25 +1,56 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import time
+from grid import Grid
 
 x = 0
 z = 0
+yaw = 0
 done = False
-sleep = 0.2
-grid = np.matrix([
-        [0,0,-2,0,0,0],
-        [0,0,-2,0,0,0],
-        [0,0,-2,0,0,0],
-        [0,-2,-2,-2,0,0],
-        [0,0,0,0,0,0],
-        [0,0,0,0,0,0]])
+sleep = 0.5
+grid = np.array([
+        [0,  0,  0,  0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, -2, -2, -2,  0,-2, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,-2, 0, 0,-2, 0],
+        [0,  0, -2,  0,  0,-2, 0, 0, 0, -2,-2,-2, 0, 0,-2, 0, 0, 0, 0,-2, 0, 0,-2, 0],
+        [0,  0, -2,  0,  0,-2, 0, 0, 0,  0, 0,-2, 0, 0,-2,-2,-2,-2, 0,-2, 0,-2, 0, 0],
+        [0,  0, -2,  0,  0,-2,-2,-2, 0, -2,-2,-2, 0, 0,-2, 0, 0,-2, 0,-2,-2, 0, 0, 0],
+        [0,  0, -2,  0,  0,-2, 0,-2, 0, -2, 0,-2, 0, 0,-2, 0, 0,-2, 0,-2, 0,-2, 0, 0],
+        [0,  0, -2,  0,  0,-2, 0,-2, 0, -2,-2, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0,-2, 0],
+        [0,  0,  0,  0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0,  0,  0, -2,  0, 0, 0,-2, 0,  0,-2,-2, 0, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0, -2,  0, 0, 0,-2, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0, -2,  0, 0, 0,-2, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0, -2,  0, 0, 0,-2, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0, -2,  0, 0, 0,-2, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0, -2, 0,-2, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0, -2, 0,-2, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0, -2, 0, 0,-2, 0,-2, 0, 0,-2, 0, 0, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0,-2, 0, 0, 0,  0,-2,-2, 0, 0, 0,-2,-2, 0, 0,-2, 0, 0, 0, 0],
+        [0,  0,  0,  0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
-max_x = grid.shape[0]
-max_z = grid.shape[1]
-traversed = np.zeros((max_x, max_z))
-traversed[x,z] = 1
+radius = 12
+max_x = 2*radius
+max_z = 2*radius
+# Grid = Grid(radius)
+
+
+
+# random_obstacles = -np.floor(1.3 * np.random.rand(2*radius, 2*radius))
+# random_obstacles = random_obstacles.astype(Grid.grid.dtype)
+# Grid.grid = Grid.grid + random_obstacles
+
+
+original_grid = grid.copy()
+traversed = np.zeros((2*radius, 2*radius))
+traversed[x, z] = 1
 threshold = -1
+
 
 def explore():
     print("beginning search")
@@ -32,6 +63,7 @@ def explore():
 
     x = get_x()
     z = get_z()
+    yaw = get_yaw()
 
     def is_open(x, z):
         if x < 0 or z < 0 or x >= max_x or z >= max_z:
@@ -166,7 +198,7 @@ def move_down( desired_x, desired_z):
     x = get_x()
     z = get_z()
     print("moving backwards, from z=", z, " to z=", desired_z)
-    #rotate
+    rotate(np.pi)
 
     #move
     while(abs(desired_z - z) > 0.2):
@@ -174,7 +206,6 @@ def move_down( desired_x, desired_z):
         #print("trying to go to: ", desired_z)
         set_z(desired_z)
         z = get_z()
-
 
     traversed[int(desired_x), int(desired_z)] = 1
     print(traversed)
@@ -186,63 +217,101 @@ def move_down( desired_x, desired_z):
     update_map()
     time.sleep(sleep)
 
-def set_yaw( change): #might need to multiply the change value
-    #msg = Joy()
-    #msg.axes = [0, 0, self.height, change] #double check these values
-    #self.position_control.publish(msg)
-    #time.sleep(1)
+
+def rotate(desired_yaw):
+    set_yaw(desired_yaw)
     return
 
-def rotate( desired_yaw):
-    return
-    print("rotating to ", desired_yaw, "radians")
-    error = (np.pi)/16
-    yaw = self.StreamAttitude.yaw_y
-    while (yaw < desired_yaw - error or yaw > desired_yaw + error):
-        print("current yaw is ", yaw)
-        print("setting yaw to ", desired_yaw)
-        self.set_yaw(desired_yaw + error) #if our yaw is lower, we increase it. if its too high, we decrease it
-        yaw = self.StreamAttitude.yaw_y
-    self.set_yaw(0) #stop rotating
-    return
 
-def set_z( change):
+def set_z(change):
     global z
     z = change
     return
 
-def set_x( change):
+
+def set_x(change):
     global x
     x = change
     return
+
+
+def set_yaw(change):
+    global yaw
+    yaw = change
+    return yaw
+
+
 def get_x():
     return x
+
+
 def get_z():
     return z
+
+
+def get_yaw():
+    return yaw
+
+
 def check_mission_accomplished():
     if done:
         print("************************")
-        print("DONE. MISSION ACCOMPLISHED")
+        print("DONE. MISSION ACCOMPLISHED.")
         print("************************")
     return done
 
-def update_map():
-    B = np.zeros(traversed.shape)
-    G = (traversed > 0.2) * traversed
-    R = (traversed < 0.2) * traversed
-    #R += (grid < 0) * grid * -1
-    BGR_grid = np.dstack([B, G, R])
 
-    cv2.namedWindow("Grid", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Grid", 600, 600)
-    cv2.imshow("Grid", 30*BGR_grid)
+def update_map():
+
+    x = get_x()
+    z = get_z()
+    # yaw = get_yaw()
+
+    # f = 6
+    # if yaw == 0:
+        # for i in f
+
+    # depth_map = 5*np.ones(25)
+    # box, z1, z2, x1, x2 = Grid.update(depth_map, np.pi/3, yaw, x, z)
+
+    # boxx = np.zeros(traversed.shape)
+    # boxx[z1:z2, x1:x2] = 1
+
+    traversed_tiles = (traversed > 0.2) * traversed * 255
+    tB = traversed_tiles.copy()
+    tG = np.ones(original_grid.shape) + original_grid - traversed_tiles
+    tR = -original_grid
+
+    tB[x, z] = 1
+    tG[x, z] = 1
+    tR[x, z] = 1
+
+    BGR_traversed = np.dstack([tB, tG, tR])
+
+    out = BGR_traversed
+
+    # if yaw == 0:
+        # depth_map = np.min(Grid.grid[], axis=0)
+
+
+    # B = np.zeros(Grid.grid.shape)
+    # G = (Grid.grid > 0) * Grid.grid
+    # R = (Grid.grid < 0) * Grid.grid * -1
+    # BGR_grid = np.dstack([B, G, R]) * gK
+    # out = np.hstack([BGR_traversed, BGR_grid])
+
+    cv2.namedWindow("Planning", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Planning", 600, 600)
+    cv2.imshow("Planning", out)
 
     cv2.waitKey(3)
     return
 
-def main():
-    explore()
+# def main():
+    # explore()
 
-if __name__ == '__main__':
-    #main(sys.argv)
-    main()
+# if __name__ == '__main__':
+    # #main(sys.argv)
+    # main()
+##
+

@@ -1,3 +1,7 @@
+import numpy as np
+import cv2
+
+
 # Create the 3xN meshgrid corresponding to `im`.
 # This meshgrid will be an array of the form:
 #    0 1 2     0 1 2     0 1 2     im.width  (x)

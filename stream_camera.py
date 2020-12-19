@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-import roslib
-roslib.load_manifest('isaacs_autonomy')
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-#import numpy as np
-#import cv2
 
 
 # This class receives a ROS image type and converts it
 # to a NumPy and OpenCV compatible format.
+# RATE: 10 hz (disparity map)
+#       20 hz (fpv images)
 class StreamCamera:
 
     def __init__(self, topic, encoding="bgr8"):
@@ -23,8 +21,6 @@ class StreamCamera:
         - encoding: The encoding of the image. Choose "bgr8" for uint8 BGR,
                     or "mono8" for uint8 grayscale.
         """
-
-        #self.topic = topic
 
         # The current image and its parameters.
         self.image = None
@@ -43,8 +39,5 @@ class StreamCamera:
             image = self.bridge.imgmsg_to_cv2(data, self.encoding)
             self.image = image
             self.height, self.width = image.shape[:2]
-            #print(self.height, self.width)
-            #cv2.imshow(self.topic, image)
-            #cv2.waitKey(3)
         except CvBridgeError as error:
             print(error)

@@ -47,12 +47,7 @@ def main():
             print("move forward in x, at height 10. publish 30 times")
             for i in range(10):
                 pub.publish(msg)
-<<<<<<< HEAD
-                r.sleep()
-                time.sleep(1)
-=======
                 time.sleep(0.1)
->>>>>>> 2082df92fdef1b80252732089062c36991a5cac0
 
         elif (input == "4"):
             msg.axes = [10, -10, 1, np.pi]

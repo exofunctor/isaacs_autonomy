@@ -6,7 +6,7 @@ import pymap3d as pm
 
 
 # Stream the attitude of the UAV.
-# RATE: ? hz TODO
+# RATE: 50 hz
 class StreamPosition:
     def __init__(self, topic, UAV_diameter=0.887):
         """

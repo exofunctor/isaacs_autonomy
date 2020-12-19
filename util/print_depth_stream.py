@@ -7,6 +7,7 @@ import cv2
 from stream_attitude import StreamAttitude
 from depth_map import DepthMap
 
+
 # This class receives a ROS image type and converts it
 # to a NumPy and OpenCV compatible format.
 class DepthVisualizer:

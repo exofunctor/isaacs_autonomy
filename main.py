@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import rospy
 import sys
 import numpy as np
@@ -7,17 +8,8 @@ from stream_attitude import StreamAttitude
 from stream_camera import StreamCamera
 from depth_map import DepthMap
 from grid import Grid
-
 from sensor_msgs.msg import Joy
 from dji_sdk.srv import SDKControlAuthority, DroneTaskControl
-#from isaacs_autonomy.srv import Search
-
-import time
-
-#from robotics_final_project.segmentation import Segmentation
-#from robotics_final_project.path_planner import PathPlanner
-# import roslib
-# roslib.load_manifest('isaacs_autonomy')
 
 
 # Matrice 210 Specifications:
@@ -33,10 +25,11 @@ class Explorer:
                  topic_position="/dji_sdk/gps_position",
                  topic_attitude="/dji_sdk/attitude",
                  topic_disparity="/dji_sdk/stereo_240p_front_depth_images",
+                 service_get_auth="/dji_sdk/sdk_control_authority",
+                 service_control="/dji_sdk/drone_task_control",
+                 topic_position_control="/dji_sdk/flight_control_setpoint_ENUposition_yaw",
                  disparity_focal_length=None,
-                 disparity_FOV=np.pi/3,
-                 topic_segmentation="/dji_sdk/fpv_camera_images",
-                 ):
+                 disparity_FOV=np.pi/3):
 
         print("[INFO]: Initializing Explorer")
 
@@ -48,35 +41,38 @@ class Explorer:
         self.topic_position = topic_position
         self.topic_attitude = topic_attitude
         self.topic_disparity = topic_disparity
+        self.service_get_auth = service_get_auth
+        self.service_control = service_control
+        self.topic_position_control = topic_position_control
         self.disparity_focal_length = disparity_focal_length
         self.disparity_FOV = disparity_FOV
-        self.topic_segmentation = topic_segmentation
         self.height = 1.2
         self.radius = search_radius
 
-        # Start the sensor streamers. TODO TODO: synchronize at 10 hz
-        # TODO: ? hz
+        # Start the sensor streamers.
+        # Position @ 50 hz
         self.StreamPosition = StreamPosition(self.topic_position, UAV_diameter)
         print("[INFO]: StreamPosition OK")
-        # 100 hz
+        # Attitude @ 100 hz
         self.StreamAttitude = StreamAttitude(self.topic_attitude)
         print("[INFO]: StreamAttitude OK")
-        # 10 hz
+        # Disparity @ 10 hz
         self.StreamDisparity = StreamCamera(self.topic_disparity, "mono8")
         print("[INFO]: StreamDisparity OK")
-	#print(self.StreamDisparity.image)
-        # TODO: ? hz
-        self.StreamSegmentation = StreamCamera(self.topic_segmentation, "bgr8")
-        print("[INFO]: StreamSegmentation OK")
 
         # Start the ROS node corresponding to this package.
         rospy.init_node("isaacs_autonomy", anonymous=True)
 
-        # setup publishers and services
-        self.position_control = rospy.Publisher('/dji_sdk/flight_control_setpoint_ENUposition_yaw', Joy, queue_size=10)
-        self.get_auth = rospy.ServiceProxy("/dji_sdk/sdk_control_authority", SDKControlAuthority)
-        self.control = rospy.ServiceProxy("/dji_sdk/drone_task_control", DroneTaskControl)
+        # Start the control services and publisher.
+        self.get_auth = rospy.ServiceProxy(self.service_get_auth, SDKControlAuthority)
+        self.control = rospy.ServiceProxy(self.service_control, DroneTaskControl)
+        self.position_control = rospy.Publisher(self.topic_position_control, Joy, queue_size=10)
 
+        # Get control over the physical drone.
+        if (self.get_auth(1)):
+            print("[INFO]: Authority OK")
+        else:
+            raise Exception("[ERROR]: Authority FAIL. Exiting...")
 
         # Initialize a depth map.
         self.DepthMap = DepthMap()
@@ -86,60 +82,35 @@ class Explorer:
         self.Grid = Grid(search_radius)
         print("[INFO]: Grid OK")
 
-
-        # Update the map with the initial measurements.
+        # Update the map with the reference frame measurements.
         self.update_map(True)
         print("[INFO]: World Model OK")
-
-        if (self.set_auth(1)):
-            print("got SDK authority")
-        else:
-            print("failed to obtain authority")
-
-        #self.explore()
 
     # Call this function to update the map that the UAV uses to navigate.
     # Ideally, it should be called every time that the UAV advances a tile,
     # or when it performs a sharp turn.
-    def update_map(self, verbose=True):
-        #disparity = 5*np.ones((240, 240))
-        self.DepthMap.update(#disparity,
-                             self.StreamDisparity.image,
+    def update_map(self):
+        self.DepthMap.update(self.StreamDisparity.image,
                              self.StreamAttitude.pitch_x,
                              self.StreamAttitude.roll_z,
-                             self.disparity_focal_length,
-                             #verbose
-                             False)
+                             self.disparity_focal_length)
 
         self.Grid.update(self.DepthMap.depth_map,
                          self.disparity_FOV,
                          self.StreamAttitude.yaw_y,
                          self.StreamPosition.x,
-                         self.StreamPosition.z,
-                         True)
+                         self.StreamPosition.z)
 
-        #time.sleep(1)       
-        self.update_map()
-
-    # The mission has been accomplished. Time to land!
-    # print("Mission accomplished!")
-    # TODO: /dji_sdk/drone_task_control 6
-
+    # Perform a floodfill search.
     def explore(self):
-        print("beginning search")
-        #max_x = int(2*self.radius)
-        #max_z = int(2*self.radius)
-        max_x = 6
-        max_z = 6
-        print("max_x: ", max_x)
-        print("max_z: ", max_z)
-        #max_x = self.Grid.grid.shape[1] #2*radius
-        #max_z = self.Grid.grid.shape[0] #2*radius
-        #threshold = 0.3
-        threshold = -np.inf
+        print("[INFO]: Beginning search.")
+        max_x = self.Grid.grid.shape[1]
+        max_z = self.Grid.grid.shape[0]
+        threshold = 0.3
         self.traversed = np.zeros((max_x+4, max_z+4))
         x = self.StreamPosition.x
         z = self.StreamPosition.z
+
         if (self.takeoff()):
             print("Taking off")
         else:
@@ -156,9 +127,6 @@ class Explorer:
                 #rotate and update map
                 curr_x = self.StreamPosition.x
                 curr_z = self.StreamPosition.z
-                #TODO: calculate angle between curr and deisred
-                #TODO: rotate so we face desired
-                #TODO #self.update_map() uncomment this after implementing previous 2 comments
                 occupied = self.Grid.grid[int(x), int(z)]
             print("x: ", x, "z: ", z, "is OPEN. going there next")
             return  occupied > threshold #returns false if occupied = 0 for safety reasons
@@ -199,9 +167,6 @@ class Explorer:
 
         flood_fill(x, z)
 
-    def set_auth(self, status):
-        return self.get_auth(status)
-
     def takeoff(self):
         return self.control(4)
 
@@ -209,8 +174,6 @@ class Explorer:
         return self.control(6)
 
     def move_up(self, desired_x, desired_z):
-        #need to go from (x,z) to (x,z+1)
-        #print("moving forward")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         print("moving forward, from z=", z, " to z=", desired_z)
@@ -220,8 +183,6 @@ class Explorer:
 
         #go from (x,z) to (x, z+1)
         while(abs(desired_z - z) > 0.2):
-            #print("current z: ", z)
-            #print("trying to go to: ", desired_z)
             self.set_z(desired_z - z)
             z = self.StreamPosition.z
         self.set_z(0)
@@ -234,8 +195,6 @@ class Explorer:
         self.update_map()
 
     def move_left(self, desired_x, desired_z):
-        #need to go from (x,z) to (x-1, z)
-        #print("moving left")
         x = self.StreamPosition.x
         z = self.StreamPosition.z
         print("moving left, from x=", x, " to x=", desired_x)
@@ -243,9 +202,6 @@ class Explorer:
         self.rotate((3/2)*np.pi)
         #TODO: move
         while(abs(x - desired_x) > 0.2):
-            #print("current x: ", x)
-            #print("trying to go to: ", desired_x)
-            #print("Going left.")
             self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
@@ -264,9 +220,6 @@ class Explorer:
         self.rotate((1/2)*np.pi)
         #move
         while(abs(x - desired_x) > 0.2):
-            #print("current x: ", x)
-            #print("trying to go to: ", desired_x)
-            #print("Going right.")
             self.set_x(x - desired_x)
             x = self.StreamPosition.x
         self.set_x(0)
@@ -335,33 +288,18 @@ class Explorer:
         if acc:
             print("Mission accomplished. Landing and removing authority.")
             self.land()
-            self.set_auth(0)
+            self.get_auth(0)
         return acc
 
 
-def handle_search(req):
-    dummy = 0
-    args= [dummy, req.radius]
-    main(args)
-    return True
-
-
-#def alternate_main():
-#    serv = rospy.Service("start_search", Search, handle_search)
-
-# Start the Exploration.
+# Start the exploration.
 def main(args):
-    #print(args)
-    #args = args[1:]
-    print(args[1])
     Explorer(args[1])
-    #rospy.init_node("isaacs_autonomy", anonymous=True)
-
     try:
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down...")
 
+
 if __name__ == '__main__':
     main(sys.argv)
-    #alternate_main()
